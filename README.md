@@ -2,22 +2,11 @@
 
 We want to
 
-- INSERT THE WHY
+- to make it really easy for the Panel community to develop and share live apps
 
 We provide
 
-- INSERT THE WHAT
-
-You can install and use the package as simple as.
-
-```bash
-pip install panel-sharing
-```
-
-```python
-import panel_sharing
-INSERT A SHORT EXAMPLE
-```
+- an interactive platform for developing and sharing Panel apps
 
 ![Project Intro](assets/videos/project-intro.gif)
 
@@ -31,22 +20,13 @@ Install `panel-sharing` including the *`examples` dependencies*.
 pip install  panel-sharing[examples]
 ```
 
-Explore the sample apps
+Explore the sample app
 
 ```bash
 pn hello panel-sharing
 ```
 
-![Project Intro](https://raw.githubusercontent.com/awesome-panel/panel-sharing/main/assets/videos/pn-hello-panel-sharing.gif)
-
-You can now find the *reference* and *gallery* notebooks in the `examples/awesome-panel/panel-sharing` folder. Check them out by running `jupyter lab`.
-
-## 📒 Explore the examples online
-
-Click one of the buttons
-
-[![nbviewer](https://raw.githubusercontent.com/jupyter/design/master/logos/Badges/nbviewer_badge.svg)](https://nbviewer.org/github/awesome-panel/panel-sharing/tree/main/examples/)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/awesome-panel/panel-sharing/HEAD)
+You can now find app in the `examples/awesome-panel/panel-sharing` folder.
 
 ## ⭐ Support
 
