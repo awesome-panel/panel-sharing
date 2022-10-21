@@ -10,7 +10,12 @@ We provide
 
 ![Project Intro](assets/videos/project-intro.gif)
 
-REPLACE THE INTRO VIDEO
+This project draws inspiration from other app dev and sharing tools like
+
+- [stlite](https://github.com/whitphx/stlite)
+- [CodeSandbox](https://codesandbox.io/), [JS Fiddle](https://jsfiddle.net/) etc.
+
+⚠️ THIS PROJECT IS IN AN ALPHA STATE AND WILL CHANGE. USE IT AT YOUR OWN RISK.
 
 ## 🚀 Get started in under a minute
 
