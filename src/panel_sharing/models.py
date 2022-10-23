@@ -65,11 +65,12 @@ class Project(param.Parameterized):
             self.source.save()
 
     def _get_requirements(self):
+        requirements = pathlib.Path("source/requirements.txt")
         if (
-            pathlib.Path("requirements.txt").exists()
-            and pathlib.Path("requirements.txt").read_text()
+            requirements.exists()
+            and requirements.read_text()
         ):
-            return "requirements.txt"
+            return str(requirements)
         else:
             return "auto"
 
@@ -106,13 +107,19 @@ class Project(param.Parameterized):
         }
         json.dump( obj=build_json, fp=open( "build.json", 'w' ), indent=1 )
 
-    def build(self, kwargs=None):
+    def build(self, base_target="", kwargs=None):
         if not kwargs:
             kwargs = self.build_kwargs
 
         # We use `convert_apps` over `convert_app` due to https://github.com/holoviz/panel/issues/3939
         convert_apps(**kwargs)
         self.save_build_json(kwargs)
+        if base_target!="":
+            app_html=pathlib.Path("build/app.html")
+            text = app_html.read_text(encoding="utf8")
+            text = text.replace("<head>", "<head><base target='_blank' />")
+            app_html.write_text(text, encoding="utf8")
+        
 
 
 class User(param.Parameterized):
@@ -147,8 +154,10 @@ class Storage(param.Parameterized):
 
 
 class FileStorage(Storage):
-    def __init__(self, path: str):
-        super().__init__()
+    base_target = param.Selector(default="", objects=["", "_blank"])
+    
+    def __init__(self, path: str, **params):
+        super().__init__(**params)
 
         self._path = pathlib.Path(path).absolute()
 
@@ -174,7 +183,7 @@ class FileStorage(Storage):
             tmppath = pathlib.Path(tmpdir)
             with set_directory(tmppath):
                 value.save()
-                value.build()
+                value.build(base_target=self.base_target)
 
             project = self._get_project_path(key)
             www = self._get_www_path(key)
@@ -223,7 +232,7 @@ class Site(param.Parameterized):
 
     def __init__(self, **params):
         if not "development_storage" in params:
-            params["development_storage"] = TmpFileStorage(path="apps/dev")
+            params["development_storage"] = TmpFileStorage(path="apps/dev", base_target="_blank")
         if not "examples_storage" in params:
             params["examples_storage"] = FileStorage(path="apps/examples")
         if not "production_storage" in params:
@@ -292,3 +301,21 @@ class AppState(param.Parameterized):
         key = self._get_random_key()
         self.site.development_storage[key] = self.project
         self._set_development(key)
+        print("build")
+
+    def share(self):
+        key = self.shared_key
+        url = self.shared_url
+        self.site.production_storage[key] = self.project
+        return url
+
+    def login(self):
+        with param.edit_constant(self.user):
+            self.user.authenticated=True
+
+    def logout(self):
+        with param.edit_constant(self.user):
+            self.user.authenticated=False
+
+class Gallery(param.Parameterized):
+    value = param.ClassSelector(class_=Project)

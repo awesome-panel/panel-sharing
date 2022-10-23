@@ -41,6 +41,14 @@ pn test all
 
 Please run this command and fix any failing tests if possible before you `git push`.
 
+### Serve the app
+
+```bash
+mkdir -p apps/dev/www
+mkdir -p apps/prod/www
+panel serve examples/app.py --autoreload --static-dirs apps-dev=apps/dev/www apps=apps/prod/www
+```
+
 ### 🚢 Release a new package on Pypi
 
 Update the version in the [__init__.py](src/panel_sharing/__init__.py).

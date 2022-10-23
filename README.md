@@ -12,7 +12,7 @@ We provide
 
 This project draws inspiration from other app dev and sharing tools like
 
-- [stlite](https://github.com/whitphx/stlite)
+- [stlite](https://github.com/whitphx/stlite), [shinylive](https://shinylive.io/py/examples/)
 - [CodeSandbox](https://codesandbox.io/), [JS Fiddle](https://jsfiddle.net/) etc.
 
 ⚠️ THIS PROJECT IS IN AN ALPHA STATE AND WILL CHANGE. USE IT AT YOUR OWN RISK.

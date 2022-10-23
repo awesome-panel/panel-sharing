@@ -165,3 +165,4 @@ test_results/
 script.py
 apps/dev/
 apps/prod/
+pyodide/
