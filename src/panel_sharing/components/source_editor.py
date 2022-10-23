@@ -1,6 +1,5 @@
-import param
-
 import panel as pn
+import param
 
 
 class SourceEditor(pn.viewable.Viewer):

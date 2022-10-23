@@ -1,15 +1,14 @@
-import uuid
-
+import panel as pn
 import param
 
-import panel as pn
 from panel_sharing.components.js_actions import JSActions
+
 
 class BuildProject(pn.viewable.Viewer):
     convert = param.Event()
-    
+
     open_developer_link = param.Event()
-    
+
     _state = param.Parameter()  # Todo: Make this ClassParameter with class_=AppState
     jsactions = param.ClassSelector(class_=JSActions)
 
@@ -26,7 +25,7 @@ class BuildProject(pn.viewable.Viewer):
     @pn.depends("convert", watch=True)
     def _convert(self):
         self._state.build()
-        
+
         if pn.state.notifications:
             pn.state.notifications.success("Build succeeded")
 
@@ -63,7 +62,7 @@ class BuildProject(pn.viewable.Viewer):
             label="📁 DOWNLOAD",
             align="end",
         )
-        
+
         return pn.Row(
             self.convert_button,
             # , self.open_developer_link_button, self.download_converted_files,

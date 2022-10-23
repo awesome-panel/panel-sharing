@@ -1,19 +1,21 @@
-from panel_sharing.models import AppState
-import param
 import panel as pn
+import param
+
+from panel_sharing.models import AppState
 
 TEXT = """\
 ## Authentication"""
+
 
 class Authentication(pn.viewable.Viewer):
     login = param.Event()
     logout = param.Event()
 
     app_state = param.ClassSelector(class_=AppState)
-    
+
     def __init__(self, app_state: AppState):
         super().__init__(app_state=app_state)
-        
+
         self.login_button = pn.widgets.Button.from_param(
             self.param.login,
             name="🔓 Log in",
@@ -32,9 +34,7 @@ class Authentication(pn.viewable.Viewer):
     @pn.depends("app_state.user.authenticated")
     def _panel(self):
         if not self.app_state.user.authenticated:
-            return pn.Column(
-                "## 😺 Authentication", self.login_button
-            )
+            return pn.Column("## 😺 Authentication", self.login_button)
         else:
             return pn.Column(
                 "## 😺 Authentication", self.app_state.user.param.name, self.logout_button
@@ -50,12 +50,14 @@ class Authentication(pn.viewable.Viewer):
 
     def __panel__(self):
         return pn.panel(self._panel)
-        
+
 
 if __name__.startswith("bokeh"):
     pn.extension(notifications=True, template="fast")
     app = AppState()
     auth = Authentication(app_state=app)
 
-    pn.Column(app.user.param.authenticated, ).servable()
+    pn.Column(
+        app.user.param.authenticated,
+    ).servable()
     auth.servable(target="sidebar")

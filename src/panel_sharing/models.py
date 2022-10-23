@@ -1,20 +1,17 @@
 import json
 import pathlib
 import shutil
-import subprocess
 import tempfile
 import uuid
-
 from io import BytesIO
-from typing import Dict, List
+from typing import Dict
+
+import param
+from panel import __version__
+from panel.io.convert import convert_apps
 
 from panel_sharing import config
-import param
-
 from panel_sharing.utils import set_directory
-
-from panel.io.convert import convert_apps
-from panel import __version__
 
 
 class Source(param.Parameterized):
@@ -66,18 +63,15 @@ class Project(param.Parameterized):
 
     def _get_requirements(self):
         requirements = pathlib.Path("source/requirements.txt")
-        if (
-            requirements.exists()
-            and requirements.read_text()
-        ):
+        if requirements.exists() and requirements.read_text():
             return str(requirements)
         else:
             return "auto"
 
     @property
-    def build_kwargs(self)->Dict:
+    def build_kwargs(self) -> Dict:
         """
-        
+
         Assumes we are in the Project root and the source files are in ./source
 
         Returns:
@@ -99,13 +93,13 @@ class Project(param.Parameterized):
     def save_build_json(self, kwargs: Dict):
         if not kwargs:
             kwargs = self.build_kwargs()
-        
+
         build_json = {
             "app_builder": {"awesome panel sharing": "0.0.0"},
             "app_framework": {"panel": __version__},
-            "build_kwargs": kwargs
+            "build_kwargs": kwargs,
         }
-        json.dump( obj=build_json, fp=open( "build.json", 'w' ), indent=1 )
+        json.dump(obj=build_json, fp=open("build.json", "w"), indent=1)
 
     def build(self, base_target="", kwargs=None):
         if not kwargs:
@@ -114,12 +108,11 @@ class Project(param.Parameterized):
         # We use `convert_apps` over `convert_app` due to https://github.com/holoviz/panel/issues/3939
         convert_apps(**kwargs)
         self.save_build_json(kwargs)
-        if base_target!="":
-            app_html=pathlib.Path("build/app.html")
+        if base_target != "":
+            app_html = pathlib.Path("build/app.html")
             text = app_html.read_text(encoding="utf8")
             text = text.replace("<head>", "<head><base target='_blank' />")
             app_html.write_text(text, encoding="utf8")
-        
 
 
 class User(param.Parameterized):
@@ -155,7 +148,7 @@ class Storage(param.Parameterized):
 
 class FileStorage(Storage):
     base_target = param.Selector(default="", objects=["", "_blank"])
-    
+
     def __init__(self, path: str, **params):
         super().__init__(**params)
 
@@ -172,12 +165,12 @@ class FileStorage(Storage):
 
     def _move_locally(self, tmppath: pathlib.Path, project: pathlib.Path, www: pathlib.Path):
         if project.exists():
-                shutil.rmtree(project)
+            shutil.rmtree(project)
         shutil.copytree(tmppath, project)
         if www.exists():
             shutil.rmtree(www)
         shutil.copytree(tmppath / "build", www)
-    
+
     def __setitem__(self, key: str, value: Project):
         with tempfile.TemporaryDirectory() as tmpdir:
             tmppath = pathlib.Path(tmpdir)
@@ -311,11 +304,12 @@ class AppState(param.Parameterized):
 
     def login(self):
         with param.edit_constant(self.user):
-            self.user.authenticated=True
+            self.user.authenticated = True
 
     def logout(self):
         with param.edit_constant(self.user):
-            self.user.authenticated=False
+            self.user.authenticated = False
+
 
 class Gallery(param.Parameterized):
     value = param.ClassSelector(class_=Project)
