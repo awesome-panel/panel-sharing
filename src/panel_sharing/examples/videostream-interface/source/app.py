@@ -360,7 +360,7 @@ class FaceDetectionTransform(NumpyImageTransform):
     https://scikit-image.org/docs/0.15.x/auto_examples/applications/plot_face_detection.html
     """
 
-    scale_factor = param.Number(1.4, bounds=(0.1, 2.0), step=0.1)
+    scale_factor = param.Number(1.4, bounds=(1.0, 2.0), step=0.1)
     step_ratio = param.Integer(1, bounds=(1, 10))
     size_x = param.Range(default=(60, 322), bounds=(10, 500))
     size_y = param.Range(default=(60, 322), bounds=(10, 500))

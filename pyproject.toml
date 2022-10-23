@@ -49,9 +49,11 @@ dev = [
 ]
 examples = [
     "awesome-panel-cli",
+    "hvplot",
+    "matplotlib",
     "notebook",
     "pandas",
-    "hvplot",
+    "scikit-image",
 ]
 
 [project.urls]
