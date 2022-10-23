@@ -1,8 +1,11 @@
+"""The JSActions component enables the app to trigger methods on the js side"""
 import panel as pn
 import param
 
 
-class JSActions(pn.reactive.ReactiveHTML):
+class JSActions(pn.reactive.ReactiveHTML):  # pylint: disable=too-many-ancestors
+    """Provides methods to trigger methods on the js side"""
+
     # .event cannot trigger on js side. Thus I use Integer
     _url = param.String()
     _open = param.Boolean()
@@ -10,9 +13,10 @@ class JSActions(pn.reactive.ReactiveHTML):
 
     _template = """<div id="jsaction" style="height:0px;width:0px"></div>"""
     _scripts = {
-        # Todo: Make this more robust by removing fragile replace
+        # pylint: disable=line-too-long
         "_open": "url=window.location.href.substring(0, location.href.lastIndexOf('/')+1) +  data._url;window.open(url, '_blank')",
         "_copy": "url=window.location.href.substring(0, location.href.lastIndexOf('/')+1) +  data._url;navigator.clipboard.writeText(url)",
+        # pylint: enable=line-too-long
     }
 
     def __init__(self):

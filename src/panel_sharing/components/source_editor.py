@@ -1,10 +1,12 @@
-import param
-
+"""The SourceEditor enables users to edit an instance of the Source model"""
 import panel as pn
+import param
 
 
 class SourceEditor(pn.viewable.Viewer):
-    project = param.Parameter(constant=True)  # Todo: Should be ClassSelector
+    """An Editor to edit an instance of the Source model"""
+
+    project = param.Parameter(constant=True)
 
     def __init__(self, project):
         super().__init__(project=project)

@@ -1,6 +1,6 @@
+"""A module of shared utilities"""
 import logging
 import os
-
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -28,6 +28,7 @@ def set_directory(path: Path):
 
 
 def exception_handler(ex):
+    """A general exception handler for panel apps"""
     logging.exception("Error", exc_info=ex)
     if pn.state.notifications and ex:
         pn.state.notifications.error(f"Error. {ex}")

@@ -1,9 +1,9 @@
 """Provides an iframe component to embed another web page in your page"""
 
-from panel_sharing import config
+import panel as pn
 import param
 
-import panel as pn
+from panel_sharing import config
 
 
 def iframe_string(src: str) -> str:
@@ -29,11 +29,9 @@ def _iframe(src: str, sizing_mode="stretch_both", **params) -> pn.pane.HTML:
 
 
 def iframe(src: param.String):
+    """An iframe that embeds the `src` url."""
     pane = pn.bind(_iframe, src=src)
-    # Todo: Figure out why all this wrapping is needed
-    return pn.Column(
-        pn.panel(pane, sizing_mode="stretch_both"), sizing_mode="stretch_both"
-    )
+    return pn.Column(pn.panel(pane, sizing_mode="stretch_both"), sizing_mode="stretch_both")
 
 
 faq = pn.pane.Markdown(config.FAQ, name="FAQ", sizing_mode="stretch_both")

@@ -1,7 +1,10 @@
-from panel_sharing.models import AppState
-import param
+"""The ShareProject component enables users to share the project"""
 import panel as pn
+import param
+
 from panel_sharing.components.js_actions import JSActions
+from panel_sharing.models import AppState
+
 LOGIN_TEXT = """\
 ## 🌎 Share
 
@@ -13,13 +16,16 @@ LICENSE_TEXT = """\
 By clicking the *share* button, I make my code **open source, free and MIT licensed**.
 """
 
+
 class ShareProject(pn.viewable.Viewer):
+    """Enables users to share the project"""
+
     app_state = param.ClassSelector(class_=AppState)
     js_actions = param.ClassSelector(class_=JSActions)
 
     share = param.Event()
     shared_url = param.String()
-    
+
     open_shared_link = param.Event()
     copy_shared_link = param.Event()
 
@@ -27,7 +33,7 @@ class ShareProject(pn.viewable.Viewer):
 
     def __init__(self, app_state: AppState, js_actions: JSActions):
         super().__init__(app_state=app_state, js_actions=js_actions)
-        self.reset=self._reset
+        self.reset = self._reset
         self.share_button = pn.widgets.Button.from_param(
             self.param.share,
             name="❤️ Share",
@@ -58,7 +64,7 @@ class ShareProject(pn.viewable.Viewer):
         self.shared_url = self.app_state.share()
         if pn.state.notifications:
             pn.state.notifications.success("Release succeeded")
-    
+
     @pn.depends("open_shared_link", watch=True)
     def _open_shared_link(self):
         self.js_actions.open(url=self.shared_url)
@@ -70,21 +76,17 @@ class ShareProject(pn.viewable.Viewer):
     @pn.depends("app_state.user.authenticated", "shared_url")
     def _panel(self):
         if not self.app_state.user.authenticated:
-            return pn.Column(
-                LOGIN_TEXT
-            )
+            return pn.Column(LOGIN_TEXT)
         if not self.shared_url:
-            return pn.Column(
-                LICENSE_TEXT, self.project, self.share_button
-            )
+            return pn.Column(LICENSE_TEXT, self.project, self.share_button)
         return pn.Column(
-            LICENSE_TEXT, self.project, self.share_button, self.copy_shared_link_button, self.open_shared_link_button,
-            sizing_mode="stretch_width", 
+            LICENSE_TEXT,
+            self.project,
+            self.share_button,
+            self.copy_shared_link_button,
+            self.open_shared_link_button,
+            sizing_mode="stretch_width",
         )
-
-    @pn.depends("share", watch=True)
-    def _handle_sharing(self):
-        self.shared=True
 
     def __panel__(self):
         return pn.panel(self._panel)
@@ -92,13 +94,13 @@ class ShareProject(pn.viewable.Viewer):
     def _reset(self, _):
         self.shared_url = ""
 
+
 if __name__.startswith("bokeh"):
     pn.extension(notifications=True, template="fast")
-    js_actions = JSActions()
+    js_actions_ = JSActions()
     app = AppState()
-    app.user.param.authenticated.constant=False
-    share = ShareProject(app_state=app, js_actions=js_actions)
+    app.user.param.authenticated.constant = False
+    share = ShareProject(app_state=app, js_actions=js_actions_)
 
-    pn.Column(app.user.param.authenticated, share.param.reset, js_actions).servable()
+    pn.Column(app.user.param.authenticated, share.param.reset, js_actions_).servable()
     share.servable(target="sidebar")
-        
