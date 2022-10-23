@@ -85,7 +85,7 @@ python_version = "3.9"
 namespace_packages = true
 explicit_package_bases = true
 mypy_path = "src"
-exclude = []
+exclude = ["src/panel_sharing/examples"]
 
 [[tool.mypy.overrides]]
 module = [

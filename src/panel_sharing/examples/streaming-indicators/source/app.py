@@ -4,7 +4,7 @@ import panel as pn
 pn.extension(sizing_mode="stretch_width")
 
 INDICATORS = 32
-PERIOD = 500 # mili seconds
+PERIOD = 500  # mili seconds
 
 indicators = (
     pn.indicators.Trend(
@@ -17,6 +17,7 @@ indicators = (
 )
 layout = pn.layout.FlexBox(*indicators)
 
+
 def stream():
     for trend in layout:
         trend.stream(
@@ -24,12 +25,15 @@ def stream():
             rollover=20,
         )
 
+
 periodic_callback = pn.state.add_periodic_callback(stream, PERIOD)
 
 pn.template.FastListTemplate(
     site="Awesome Panel",
     title="Streaming Indicators",
-    main=[layout,],
+    main=[
+        layout,
+    ],
     site_url="https://awesome-panel.org",
     favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",
 ).servable()

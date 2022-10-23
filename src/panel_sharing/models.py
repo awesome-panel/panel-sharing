@@ -216,6 +216,15 @@ class FileStorage(Storage):
 class TmpFileStorage(FileStorage):
     """A FileStorage with temporary files that are cleaned up when no longer in use"""
 
+    def __getitem__(self, key):
+        raise NotImplementedError()
+
+    def __delitem__(self, key):
+        raise NotImplementedError()
+
+    def keys(self):
+        raise NotImplementedError()
+
 
 class AzureBlobStorage(Storage):
     """An Azure Blob Storage"""

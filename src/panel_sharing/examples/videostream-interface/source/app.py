@@ -3,21 +3,17 @@ import base64
 import io
 import time
 
-from typing import List, Type
-
 import numpy as np
+import panel as pn
 import param
 import PIL
 import skimage
-
 from PIL import Image, ImageFilter
 from skimage import data, filters
 from skimage.color.adapt_rgb import adapt_rgb, each_channel
 from skimage.draw import rectangle
 from skimage.exposure import rescale_intensity
 from skimage.feature import Cascade
-
-import panel as pn
 
 pn.extension("terminal", sizing_mode="stretch_width")
 
@@ -225,9 +221,7 @@ class VideoStreamInterface(pn.viewable.Viewer):
             ),
             **params,
         )
-        self.image = pn.pane.JPG(
-            height=self.height, width=self.width, sizing_mode="fixed"
-        )
+        self.image = pn.pane.JPG(height=self.height, width=self.width, sizing_mode="fixed")
         self._updating = False
         transforms = [to_instance(transform) for transform in transforms]
         self.param.transform.objects = transforms
@@ -344,9 +338,8 @@ class SobelTransform(NumpyImageTransform):
 
     https://scikit-image.org/docs/0.15.x/auto_examples/color_exposure/plot_adapt_rgb.html
     """
+
     def transform(self, image):
-
-
         @adapt_rgb(each_channel)
         def sobel_each(image):
             return filters.sobel(image)

@@ -1,4 +1,3 @@
-
 import numpy as np
 import panel as pn
 from matplotlib.figure import Figure
