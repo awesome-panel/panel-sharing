@@ -72,6 +72,8 @@ def create(examples: Path = EXAMPLES):
         theme_toggle=False,
         prevent_collision=True,
         save_layout=True,
+        site_url="https://awesome-panel.org",
+        favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico", # pylint: disable=line-too-long
         sidebar=[
             pn.Column(README),
             authentication,
