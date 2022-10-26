@@ -180,6 +180,10 @@ class Storage(param.Parameterized):
         """Returns the list of keys of the storage"""
         raise NotImplementedError()
 
+    def copy(self, key: str, source: Path):
+        """Copy the source project to the specified key"""
+        raise NotImplementedError()
+
 
 class FileStorage(Storage):
     """The FileStorage represent a storage as files"""
@@ -219,6 +223,11 @@ class FileStorage(Storage):
             www = self._get_www_path(key)
 
             self._move_locally(tmppath, project, www)
+
+    def copy(self, key: str, source: Path):
+        project = self._get_project_path(key)
+        www = self._get_www_path(key)
+        self._move_locally(source, project, www)
 
     def __delitem__(self, key):
         raise NotImplementedError()
@@ -264,6 +273,10 @@ class AzureBlobStorage(Storage):
 
     def keys(self):
         """Returns the list of keys of the storage"""
+        raise NotImplementedError()
+
+    def copy(self, key: str, source: Path):
+        """Copy the source project to the specified key"""
         raise NotImplementedError()
 
 
@@ -332,7 +345,7 @@ class AppState(param.Parameterized):
 
         super().__init__(**params)
 
-    def _set_development(self, key: str):
+    def set_development(self, key: str):
         self.development_key = key
         if not key:
             self.development_url = ""
@@ -352,14 +365,25 @@ class AppState(param.Parameterized):
     def _get_random_key(self):
         return str(uuid.uuid4())
 
+    def copy(self, project: Project, source: Path):
+        state.set_development("")
+
+        source_editor.project.source.code = project.source.code
+        source_editor.project.source.readme = project.source.readme
+        source_editor.project.source.requirements = project.source.requirements
+
+        key = state._get_random_key()
+        state.site.development_storage.copy(key=key, source=examples / project.source.name)
+        state.set_development(key)
+
     def build(self):
         """Build the current project and reload the app"""
         # We need to use a new key to trigger the iframe to refresh
         # The panel server somehow messes with the file
-        self._set_development("")
+        self.set_development("")
         key = self._get_random_key()
         self.site.development_storage[key] = self.project
-        self._set_development(key)
+        self.set_development(key)
 
     def share(self):
         """Shared the current project"""

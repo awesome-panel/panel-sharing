@@ -51,7 +51,6 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
 
     def _click_handler(self, event):
         self.value = self._examples_map[event.obj.name]
-        print("click handled")
 
     def __panel__(self):
         return self._panel
