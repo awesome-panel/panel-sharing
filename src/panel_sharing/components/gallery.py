@@ -32,14 +32,14 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
     def __init__(self, examples: List[Project], **params):
         super().__init__()
 
-        self.value = examples[0]
-
         layout = pn.Column(
             pn.pane.Markdown("## 🎁 Examples"),
             sizing_mode="stretch_width",
         )
 
         self._examples_map = {example.name: example for example in examples}
+
+        self.value = self._examples_map.get("Welcome", examples[0])
 
         for example in examples:
             button = pn.widgets.Button(name=example.name, button_type="success")

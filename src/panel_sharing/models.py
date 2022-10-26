@@ -367,8 +367,6 @@ class AppState(param.Parameterized):
 
     def copy(self, project: Project, source: Path):
         """Copies the project from the source path"""
-        self._set_development("")
-
         self.project.source.code = project.source.code
         self.project.source.readme = project.source.readme
         self.project.source.requirements = project.source.requirements

@@ -41,7 +41,6 @@ def create(examples: Path = EXAMPLES):
     )
 
     state = AppState()
-    pn.state.onload(state.build)
 
     build_and_share_project = components.BuildProject(state=state)
     source_editor = components.SourceEditor(project=state.project)
@@ -56,6 +55,12 @@ def create(examples: Path = EXAMPLES):
     @pn.depends(gallery.param.value, watch=True)
     def update_project(project):
         state.copy(project, source=examples / project.source.name)
+
+    def set_default_project():
+        update_project(project=gallery.value)
+
+    # pn.state.onload(set_default_project)
+    set_default_project()
 
     target_pane = components.iframe(src=state.param.development_url)
 
