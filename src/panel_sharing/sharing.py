@@ -36,10 +36,12 @@ def create(examples: Path = EXAMPLES):
 
     """
     pn.config.raw_css.append(RAW_CSS)
-    pn.extension("ace", notifications=True, exception_handler=exception_handler)
+    pn.extension(
+        "ace", sizing_mode="stretch_width", notifications=True, exception_handler=exception_handler
+    )
 
     state = AppState()
-    state.build()
+    pn.state.onload(state.build)
 
     build_and_share_project = components.BuildProject(state=state)
     source_editor = components.SourceEditor(project=state.project)
@@ -73,9 +75,9 @@ def create(examples: Path = EXAMPLES):
         prevent_collision=True,
         save_layout=True,
         site_url="https://awesome-panel.org",
-        favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico", # pylint: disable=line-too-long
+        favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",  # pylint: disable=line-too-long
         sidebar=[
-            pn.Column(README),
+            pn.Column(pn.pane.Markdown(README)),
             authentication,
             share_project,
             gallery,

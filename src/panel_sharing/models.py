@@ -310,7 +310,10 @@ class AppState(param.Parameterized):
 
     def _set_development(self, key: str):
         self.development_key = key
-        self.development_url = self.site.get_development_src(key)
+        if not key:
+            self.development_url = ""
+        else:
+            self.development_url = self.site.get_development_src(key)
 
     def set_shared(self, key: str):
         """Sets the shared_key and shared_url"""
@@ -329,10 +332,10 @@ class AppState(param.Parameterized):
         """Build the current project and reload the app"""
         # We need to use a new key to trigger the iframe to refresh
         # The panel server somehow messes with the file
+        self._set_development("")
         key = self._get_random_key()
         self.site.development_storage[key] = self.project
         self._set_development(key)
-        print("build")
 
     def share(self):
         """Shared the current project"""
