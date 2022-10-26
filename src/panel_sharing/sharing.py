@@ -55,7 +55,7 @@ def create(examples: Path = EXAMPLES):
 
     @pn.depends(gallery.param.value, watch=True)
     def update_project(project):
-        state.copy(project, source=source=examples / project.source.name)
+        state.copy(project, source=examples / project.source.name)
 
     target_pane = components.iframe(src=state.param.development_url)
 

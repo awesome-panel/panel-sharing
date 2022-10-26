@@ -345,7 +345,7 @@ class AppState(param.Parameterized):
 
         super().__init__(**params)
 
-    def set_development(self, key: str):
+    def _set_development(self, key: str):
         self.development_key = key
         if not key:
             self.development_url = ""
@@ -366,24 +366,25 @@ class AppState(param.Parameterized):
         return str(uuid.uuid4())
 
     def copy(self, project: Project, source: Path):
-        state.set_development("")
+        """Copies the project from the source path"""
+        self._set_development("")
 
-        source_editor.project.source.code = project.source.code
-        source_editor.project.source.readme = project.source.readme
-        source_editor.project.source.requirements = project.source.requirements
+        self.project.source.code = project.source.code
+        self.project.source.readme = project.source.readme
+        self.project.source.requirements = project.source.requirements
 
-        key = state._get_random_key()
-        state.site.development_storage.copy(key=key, source=examples / project.source.name)
-        state.set_development(key)
+        key = self._get_random_key()
+        self.site.development_storage.copy(key=key, source=source)
+        self._set_development(key)
 
     def build(self):
         """Build the current project and reload the app"""
         # We need to use a new key to trigger the iframe to refresh
         # The panel server somehow messes with the file
-        self.set_development("")
+        self._set_development("")
         key = self._get_random_key()
         self.site.development_storage[key] = self.project
-        self.set_development(key)
+        self._set_development(key)
 
     def share(self):
         """Shared the current project"""
