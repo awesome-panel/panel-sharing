@@ -1,19 +1,45 @@
 """Base models for Panel Sharing"""
 # Should not contain any Panel UI elements
 import json
+import multiprocessing
 import pathlib
 import shutil
 import tempfile
 import uuid
 from io import BytesIO
+from pathlib import Path
 from typing import Dict
 
 import param
 from panel import __version__
-from panel.io.convert import convert_apps
+from panel.io.convert import convert_app
 
-from panel_sharing import config
+from panel_sharing import VERSION, config
 from panel_sharing.utils import set_directory
+
+ctx_forkserver = multiprocessing.get_context("forkserver")
+ctx_forkserver.set_forkserver_preload(
+    [
+        "base64",
+        "bokeh",
+        "holoviews",
+        "hvplot",
+        "io",
+        "matplotlib",
+        "numpy",
+        "pandas",
+        "panel",
+        "param",
+        "PIL",
+        "skimage",
+    ]
+)
+
+
+def _convert_project(app: str = "source/app.py", dest_path: str = "build", requirements="auto"):
+    """Helper function"""
+    Path(dest_path).mkdir(parents=True, exist_ok=True)
+    convert_app(app=Path(app), dest_path=Path(dest_path), requirements=requirements)  # type: ignore
 
 
 class Source(param.Parameterized):
@@ -81,18 +107,11 @@ class Project(param.Parameterized):
         Returns:
             _description_
         """
-        return dict(
-            apps=["source/app.py"],
-            dest_path="build",
-            runtime="pyodide-worker",
-            requirements=self._get_requirements(),
-            prerender=True,
-            build_index=False,
-            build_pwa=False,
-            pwa_config={},
-            verbose=False,
-            max_workers=1,
-        )
+        return {
+            "app": "source/app.py",
+            "dest_path": "build",
+            "requirements": self._get_requirements(),
+        }
 
     def save_build_json(self, kwargs: Dict):
         """Saves the build configuration in a json file in the current working directory"""
@@ -100,22 +119,27 @@ class Project(param.Parameterized):
             kwargs = self._build_kwargs
 
         build_json = {
-            "app_builder": {"awesome panel sharing": "0.0.0"},
+            "app_builder": {"panel sharing": VERSION},
             "app_framework": {"panel": __version__},
             "build_kwargs": kwargs,
         }
         with open("build.json", "w", encoding="utf8") as file:
             json.dump(obj=build_json, fp=file, indent=1)
 
-    def build(self, base_target="", kwargs=None):
+    def build(self, base_target=""):
         """Saves and builds (i.e. converts) to the current working directory"""
-        if not kwargs:
-            kwargs = self._build_kwargs
+        kwargs = self._build_kwargs
 
-        # We use `convert_apps` over `convert_app` due to
+        # We need to be really careful when we convert. See
         # https://github.com/holoviz/panel/issues/3939
-        convert_apps(**kwargs)
+        process = ctx_forkserver.Process(
+            target=_convert_project,
+            kwargs=kwargs,
+        )
+        process.start()
+
         self.save_build_json(kwargs)
+        process.join()
         if base_target != "":
             app_html = pathlib.Path("build/app.html")
             text = app_html.read_text(encoding="utf8")
