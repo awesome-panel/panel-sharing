@@ -180,6 +180,10 @@ class Storage(param.Parameterized):
         """Returns the list of keys of the storage"""
         raise NotImplementedError()
 
+    def copy(self, key: str, source: Path):
+        """Copy the source project to the specified key"""
+        raise NotImplementedError()
+
 
 class FileStorage(Storage):
     """The FileStorage represent a storage as files"""
@@ -219,6 +223,11 @@ class FileStorage(Storage):
             www = self._get_www_path(key)
 
             self._move_locally(tmppath, project, www)
+
+    def copy(self, key: str, source: Path):
+        project = self._get_project_path(key)
+        www = self._get_www_path(key)
+        self._move_locally(source, project, www)
 
     def __delitem__(self, key):
         raise NotImplementedError()
@@ -264,6 +273,10 @@ class AzureBlobStorage(Storage):
 
     def keys(self):
         """Returns the list of keys of the storage"""
+        raise NotImplementedError()
+
+    def copy(self, key: str, source: Path):
+        """Copy the source project to the specified key"""
         raise NotImplementedError()
 
 
@@ -351,6 +364,18 @@ class AppState(param.Parameterized):
 
     def _get_random_key(self):
         return str(uuid.uuid4())
+
+    def copy(self, project: Project, source: Path):
+        """Copies the project from the source path"""
+        self._set_development("")
+
+        self.project.source.code = project.source.code
+        self.project.source.readme = project.source.readme
+        self.project.source.requirements = project.source.requirements
+
+        key = self._get_random_key()
+        self.site.development_storage.copy(key=key, source=source)
+        self._set_development(key)
 
     def build(self):
         """Build the current project and reload the app"""

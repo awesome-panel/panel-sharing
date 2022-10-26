@@ -1,22 +1,13 @@
 {
  "app_builder": {
-  "awesome panel sharing": "0.0.0"
+  "panel sharing": "0.3.0"
  },
  "app_framework": {
   "panel": "0.14.0"
  },
  "build_kwargs": {
-  "apps": [
-   "source/app.py"
-  ],
+  "app": "source/app.py",
   "dest_path": "build",
-  "runtime": "pyodide-worker",
-  "requirements": "source/requirements.txt",
-  "prerender": true,
-  "build_index": false,
-  "build_pwa": false,
-  "pwa_config": {},
-  "verbose": false,
-  "max_workers": 1
+  "requirements": "source/requirements.txt"
  }
 }
