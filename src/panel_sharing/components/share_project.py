@@ -76,11 +76,11 @@ class ShareProject(pn.viewable.Viewer):
     @pn.depends("app_state.user.authenticated", "shared_url")
     def _panel(self):
         if not self.app_state.user.authenticated:
-            return pn.Column(LOGIN_TEXT)
+            return pn.Column(pn.pane.Markdown(LOGIN_TEXT))
         if not self.shared_url:
-            return pn.Column(LICENSE_TEXT, self.project, self.share_button)
+            return pn.Column(pn.pane.Markdown(LICENSE_TEXT), self.project, self.share_button)
         return pn.Column(
-            LICENSE_TEXT,
+            pn.pane.Markdown(LICENSE_TEXT),
             self.project,
             self.share_button,
             self.copy_shared_link_button,

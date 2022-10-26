@@ -5,6 +5,10 @@ import param
 
 from panel_sharing import config
 
+loading_indicator = pn.indicators.LoadingSpinner(
+    value=True, width=100, height=100, sizing_mode="fixed"
+)
+
 
 def iframe_string(src: str) -> str:
     """Returns an iframe string"""
@@ -24,6 +28,8 @@ def _iframe(src: str, sizing_mode="stretch_both", **params) -> pn.pane.HTML:
     Returns:
         An iframe inside a HTML pane
     """
+    if not src:
+        return loading_indicator
     # pylint: disable=line-too-long
     return pn.pane.HTML(iframe_string(src=src), sizing_mode=sizing_mode, **params)
 

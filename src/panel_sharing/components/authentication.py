@@ -37,9 +37,13 @@ class Authentication(pn.viewable.Viewer):
     @pn.depends("app_state.user.authenticated")
     def _panel(self):
         if not self.app_state.user.authenticated:
-            return pn.Column("## 😺 Authentication", self.login_button)
+            return pn.Column(pn.pane.Markdown("## 😺 Authentication"), self.login_button)
 
-        return pn.Column("## 😺 Authentication", self.app_state.user.param.name, self.logout_button)
+        return pn.Column(
+            pn.pane.Markdown("## 😺 Authentication"),
+            self.app_state.user.param.name,
+            self.logout_button,
+        )
 
     @pn.depends("login", watch=True)
     def _login_user(self):
