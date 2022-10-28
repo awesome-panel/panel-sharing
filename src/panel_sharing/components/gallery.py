@@ -32,14 +32,14 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
     def __init__(self, examples: List[Project], **params):
         super().__init__()
 
-        self.value = examples[0]
-
         layout = pn.Column(
             pn.pane.Markdown("## 🎁 Examples"),
             sizing_mode="stretch_width",
         )
 
         self._examples_map = {example.name: example for example in examples}
+
+        self.value = self._examples_map.get("Welcome", examples[0])
 
         for example in examples:
             button = pn.widgets.Button(name=example.name, button_type="success")
@@ -56,13 +56,17 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
         return self._panel
 
     @classmethod
-    def create_from_project(cls, path: Path) -> "Gallery":
+    def read(cls, path: Path) -> "Gallery":
         """Returns a Gallery of projects read from the specified path"""
         examples = _read_projects(path)
         return cls(examples=examples)
 
+    def get(self, name) -> Project:
+        """Returns the project with the specified name"""
+        return self._examples_map[name]
+
 
 if __name__.startswith("bokeh"):
     pn.extension(template="fast")
-    gallery = Gallery.create_from_project(Path("examples/projects/awesome-panel"))
+    gallery = Gallery.read(Path("examples/projects/awesome-panel"))
     pn.Column(gallery.param.value, gallery).servable(target="sidebar")

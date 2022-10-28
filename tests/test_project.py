@@ -19,3 +19,13 @@ def test_build(tmpdir):
         assert Path("source/readme.md").exists()
         assert Path("source/requirements.txt").exists()
         assert Path("build/app.html").exists()
+
+
+def test_save_read(tmpdir):
+    """We can save and read a project"""
+    project = Project()
+    project.source.code = "import panel"
+    with set_directory(Path(tmpdir)):
+        project.save()
+        new_project = Project.read()
+    assert project.source.code == new_project.source.code

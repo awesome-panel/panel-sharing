@@ -46,7 +46,7 @@ Please run this command and fix any failing tests if possible before you `git pu
 ```bash
 mkdir -p apps/dev/www
 mkdir -p apps/prod/www
-panel serve examples/sharing.py --autoreload --static-dirs apps-dev=apps/dev/www apps=apps/prod/www
+panel serve examples/sharing.py --autoreload --static-dirs apps-dev=apps/dev/www apps=apps/prod/www --autoreload
 ```
 
 ### 🚢 Release a new package on Pypi

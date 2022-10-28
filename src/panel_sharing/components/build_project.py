@@ -5,7 +5,7 @@ import param
 from panel_sharing.components.js_actions import JSActions
 
 
-class BuildProject(pn.viewable.Viewer):
+class ProjectBuilder(pn.viewable.Viewer):
     """A component that enables users to convert the project"""
 
     convert = param.Event()

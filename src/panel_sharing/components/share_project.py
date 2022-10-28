@@ -64,6 +64,10 @@ class ShareProject(pn.viewable.Viewer):
         self.shared_url = self.app_state.share()
         if pn.state.notifications:
             pn.state.notifications.success("Release succeeded")
+        if pn.state.location:
+            key = self.app_state.shared_key
+            pn.state.location.search = ""
+            pn.state.location.update_query(app=key)
 
     @pn.depends("open_shared_link", watch=True)
     def _open_shared_link(self):
