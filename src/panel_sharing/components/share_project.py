@@ -16,18 +16,24 @@ LICENSE_TEXT = """\
 By clicking the *share* button, I make my code **open source, free and MIT licensed**.
 """
 
+RAW_CSS = """
+#sidebar a.bk-btn.bk-btn-light {
+    color: var(--neutral-foreground-rest);
+}
+"""
+
 
 class ShareProject(pn.viewable.Viewer):
     """Enables users to share the project"""
 
-    app_state = param.ClassSelector(class_=AppState)
-    js_actions = param.ClassSelector(class_=JSActions)
+    app_state: AppState = param.ClassSelector(class_=AppState)
+    js_actions: JSActions = param.ClassSelector(class_=JSActions)
 
     share = param.Event()
-    shared_url = param.String()
+    shared_url: str = param.String()
 
-    open_shared_link = param.Event()
-    copy_shared_link = param.Event()
+    open_shared_link: bool = param.Event()
+    copy_shared_link: bool = param.Event()
 
     reset = param.Action()
 
@@ -58,6 +64,20 @@ class ShareProject(pn.viewable.Viewer):
             align="end",
             button_type="light",
         )
+        self.download_shared_files_button = pn.widgets.FileDownload(
+            callback=self._download_callback,
+            filename="build.zip",
+            button_type="light",
+            sizing_mode="stretch_width",
+            label="📁 DOWNLOAD",
+            align="end",
+        )
+        if not RAW_CSS in pn.config.raw_css:
+            pn.config.raw_css.append(RAW_CSS)
+
+    def _download_callback(self):
+        key = self.app_state.shared_key
+        return self.app_state.site.production_storage.get_zipped_folder(key=key)
 
     @pn.depends("share", watch=True)
     def _share(self):
@@ -89,6 +109,7 @@ class ShareProject(pn.viewable.Viewer):
             self.share_button,
             self.copy_shared_link_button,
             self.open_shared_link_button,
+            self.download_shared_files_button,
             sizing_mode="stretch_width",
         )
 
