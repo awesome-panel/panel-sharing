@@ -35,6 +35,8 @@ ctx_forkserver.set_forkserver_preload(
     ]
 )
 
+EXAMPLES = Path(__file__).parent / "examples"
+
 
 def _convert_project(app: str = "source/app.py", dest_path: str = "build", requirements="auto"):
     """Helper function"""
@@ -67,6 +69,16 @@ class Source(param.Parameterized):
         for file_path, text in self._items():
             pathlib.Path(path / file_path).write_text(text, encoding="utf8")
 
+    @classmethod
+    def read(cls) -> "Source":
+        """Reads the Source from the current working directory"""
+        path = pathlib.Path()
+        source = cls(name="new")
+        source.code = (path / "app.py").read_text()
+        source.readme = (path / "readme.md").read_text()
+        source.requirements = (path / "requirements.txt").read_text()
+        return source
+
 
 class Project(param.Parameterized):
     """A project consists of configuration and source files"""
@@ -86,6 +98,14 @@ class Project(param.Parameterized):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def read(cls) -> "Project":
+        """Reads the Project from the current working directory"""
+        project = Project(name="new")
+        with set_directory(Path("source")):
+            project.source = Source.read()
+        return project
 
     def save(self):
         """Saves the project files to the current working directory"""
@@ -196,7 +216,9 @@ class FileStorage(Storage):
         self._path = pathlib.Path(path).absolute()
 
     def __getitem__(self, key):
-        raise NotImplementedError()
+        with set_directory(self._path / "projects" / key):
+            project = Project.read()
+        return project
 
     def _get_project_path(self, key) -> pathlib.Path:
         return self._path / "projects" / key
@@ -325,15 +347,17 @@ class Site(param.Parameterized):
 class AppState(param.Parameterized):
     """Represents the state of the Sharing App"""
 
-    site = param.Parameter(constant=True)
-    user = param.Parameter(constant=True)
-    project = param.Parameter(constant=True)
+    site: Site = param.Parameter(constant=True)
+    user: User = param.Parameter(constant=True)
+    project: Project = param.Parameter(constant=True)
 
-    development_key = param.String()
-    development_url = param.String()
+    development_key: str = param.String()
+    development_url: str = param.String()
 
-    shared_key = param.String()
-    shared_url = param.String()
+    shared_key: str = param.String()
+    shared_url: str = param.String()
+
+    examples: pathlib.Path = param.ClassSelector(default=EXAMPLES, class_=pathlib.Path)
 
     def __init__(self, **params):
         if "site" not in params:
@@ -400,6 +424,20 @@ class AppState(param.Parameterized):
         """Logs the user out"""
         with param.edit_constant(self.user):
             self.user.authenticated = False
+
+    def set_project_from_app_key(self, key):
+        """Set the current project from an app key"""
+        project = self.site.production_storage[key]
+
+        self.project.source.code = project.source.code
+        self.project.source.readme = project.source.readme
+        self.project.source.requirements = project.source.requirements
+
+        # pylint: disable=protected-access
+        source = self.site.production_storage._path / "projects" / key
+        key = self._get_random_key()
+        self.site.development_storage.copy(key=key, source=source)
+        self._set_development(key)
 
 
 class Gallery(param.Parameterized):

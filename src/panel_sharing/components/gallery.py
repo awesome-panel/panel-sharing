@@ -56,13 +56,17 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
         return self._panel
 
     @classmethod
-    def create_from_project(cls, path: Path) -> "Gallery":
+    def read(cls, path: Path) -> "Gallery":
         """Returns a Gallery of projects read from the specified path"""
         examples = _read_projects(path)
         return cls(examples=examples)
 
+    def get(self, name) -> Project:
+        """Returns the project with the specified name"""
+        return self._examples_map[name]
+
 
 if __name__.startswith("bokeh"):
     pn.extension(template="fast")
-    gallery = Gallery.create_from_project(Path("examples/projects/awesome-panel"))
+    gallery = Gallery.read(Path("examples/projects/awesome-panel"))
     pn.Column(gallery.param.value, gallery).servable(target="sidebar")

@@ -1,13 +1,16 @@
 """Create the Awesome Panel Sharing App"""
 from __future__ import annotations
 
-from pathlib import Path
-
 import panel as pn
 
 from panel_sharing import components
 from panel_sharing.models import AppState
-from panel_sharing.utils import exception_handler
+from panel_sharing.utils import (
+    exception_handler,
+    get_app_key,
+    get_example_key,
+    notify_app_key_not_found,
+)
 
 README = """## 📖 About
 
@@ -25,10 +28,8 @@ RAW_CSS = """
 }
 """
 
-EXAMPLES = Path(__file__).parent / "examples"
 
-
-def create(examples: Path = EXAMPLES):
+def create():
     """Returns an instance of the Panel Sharing app
 
     Args:
@@ -42,32 +43,43 @@ def create(examples: Path = EXAMPLES):
 
     state = AppState()
 
-    build_and_share_project = components.BuildProject(state=state)
-    source_editor = components.SourceEditor(project=state.project)
-    editor_tab = pn.Column(
-        build_and_share_project, source_editor, sizing_mode="stretch_both", name="Edit"
-    )
-
-    source_pane = editor_tab
-
-    gallery = components.Gallery.create_from_project(examples)
+    gallery = components.Gallery.read(state.examples)
 
     @pn.depends(gallery.param.value, watch=True)
-    def update_project(project):
-        state.copy(project, source=examples / project.source.name)
+    def set_example(project):
+        state.copy(project, source=state.examples / project.source.name)
+        pn.state.location.search = ""
+        pn.state.location.update_query(example=project.name)
 
-    def set_default_project():
-        update_project(project=gallery.value)
+    key = get_app_key()
+    example = get_example_key()
+    if key:
+        try:
+            state.set_project_from_app_key(key)
+            pn.state.location.search = ""
+            pn.state.location.update_query(app=key)
+        except:  # pylint: disable=bare-except
+            notify_app_key_not_found("app", key)
+            set_example(project=gallery.value)
+            pn.state.location.search = ""
+    else:
+        try:
+            set_example(project=gallery.get(example))
+        except:  # pylint: disable=bare-except
+            notify_app_key_not_found("example", key)
+            set_example(project=gallery.value)
+            pn.state.location.search = ""
 
-    # pn.state.onload(set_default_project)
-    set_default_project()
+    project_builder = components.ProjectBuilder(state=state)
+    source_editor = components.SourceEditor(source=state.project.source)
+    editor_tab = pn.Column(project_builder, source_editor, sizing_mode="stretch_both", name="Edit")
+
+    source_pane = editor_tab
 
     target_pane = components.iframe(src=state.param.development_url)
 
     authentication = components.Authentication(app_state=state)
-    share_project = components.ShareProject(
-        app_state=state, js_actions=build_and_share_project.jsactions
-    )
+    share_project = components.ShareProject(app_state=state, js_actions=project_builder.jsactions)
 
     template = pn.template.FastGridTemplate(
         site=state.site.name,
@@ -82,7 +94,7 @@ def create(examples: Path = EXAMPLES):
             authentication,
             share_project,
             gallery,
-            build_and_share_project.jsactions,
+            project_builder.jsactions,
         ],
     )
     template.main[0:5, 0:6] = source_pane
