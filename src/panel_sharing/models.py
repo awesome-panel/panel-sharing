@@ -15,23 +15,23 @@ from panel import __version__
 from panel.io.convert import convert_app
 
 from panel_sharing import VERSION, config
-from panel_sharing.utils import set_directory
+from panel_sharing.utils import Timer, set_directory
 
 ctx_forkserver = multiprocessing.get_context("forkserver")
 ctx_forkserver.set_forkserver_preload(
     [
-        "base64",
+        # "base64",
         "bokeh",
         "holoviews",
         "hvplot",
-        "io",
-        "matplotlib",
+        # "io",
+        # "matplotlib",
         "numpy",
         "pandas",
         "panel",
         "param",
-        "PIL",
-        "skimage",
+        # "PIL",
+        # "skimage",
     ]
 )
 
@@ -152,14 +152,15 @@ class Project(param.Parameterized):
 
         # We need to be really careful when we convert. See
         # https://github.com/holoviz/panel/issues/3939
-        process = ctx_forkserver.Process(
-            target=_convert_project,
-            kwargs=kwargs,
-        )
-        process.start()
+        with Timer("convert project"):
+            process = ctx_forkserver.Process(
+                target=_convert_project,
+                kwargs=kwargs,
+            )
+            process.start()
 
-        self.save_build_json(kwargs)
-        process.join()
+            self.save_build_json(kwargs)
+            process.join()
         if base_target != "":
             app_html = pathlib.Path("build/app.html")
             text = app_html.read_text(encoding="utf8")
