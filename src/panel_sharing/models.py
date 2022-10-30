@@ -170,7 +170,7 @@ class Project(param.Parameterized):
 
             self.save_build_json(kwargs)
             process.join()
-        if base_target != "":
+        if base_target != "" or True:
             app_html = pathlib.Path("build/app.html")
             text = app_html.read_text(encoding="utf8")
             text = text.replace("<head>", "<head><base target='_blank' />")

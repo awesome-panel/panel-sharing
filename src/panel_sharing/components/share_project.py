@@ -17,7 +17,7 @@ By clicking the *Share* button, I make my code **open source, free and MIT licen
 """
 
 RAW_CSS = """
-#sidebar a.bk-btn.bk-btn-light {
+#sidebar a.bk-btn.bk-btn-success {
     color: var(--neutral-foreground-rest);
     padding-top: 5px !important;
 }
@@ -53,25 +53,25 @@ class ShareProject(pn.viewable.Viewer):
         )
         self.open_shared_link_button = pn.widgets.Button.from_param(
             self.param.open_shared_link,
-            name="🔗 OPEN",
+            name="🔗 Open",
             sizing_mode="stretch_width",
             align="end",
-            button_type="light",
+            button_type="success",
         )
         self.copy_shared_link_button = pn.widgets.Button.from_param(
             self.param.copy_shared_link,
-            name="✂️ COPY",
+            name="✂️ Copy",
             sizing_mode="stretch_width",
             align="end",
-            button_type="light",
+            button_type="success",
         )
         self.download_shared_files_button = pn.widgets.FileDownload(
             callback=self._download_callback,
             filename="build.zip",
-            button_type="light",
+            button_type="success",
             sizing_mode="stretch_width",
             height=30,
-            label="📁 DOWNLOAD",
+            label="📁 Download",
             align="end",
         )
         if not RAW_CSS in pn.config.raw_css:
@@ -102,16 +102,16 @@ class ShareProject(pn.viewable.Viewer):
     @pn.depends("app_state.user.authenticated", "shared_url")
     def _panel(self):
         if not self.app_state.user.authenticated:
-            return pn.Column(pn.pane.Markdown(LOGIN_TEXT))
+            return pn.Column(pn.pane.Markdown(LOGIN_TEXT, margin=0))
         if not self.shared_url:
             return pn.Column(
-                pn.pane.Markdown(LICENSE_TEXT),
+                pn.pane.Markdown(LICENSE_TEXT, margin=0),
                 pn.widgets.TextInput.from_param(self.app_state.user.param.name, name="User"),
                 self.project,
                 self.share_button,
             )
         return pn.Column(
-            pn.pane.Markdown(LICENSE_TEXT),
+            pn.pane.Markdown(LICENSE_TEXT, margin=0),
             pn.widgets.TextInput.from_param(self.app_state.user.param.name, name="User"),
             self.project,
             self.share_button,

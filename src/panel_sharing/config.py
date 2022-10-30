@@ -1,6 +1,6 @@
 """Default values and other configuration values"""
 SITE = "Awesome Panel"
-TITLE = "Sharing PROTOTYPE!"
+TITLE = "Panel Sharing"
 
 FAQ = """
 # Frequently Asked Questions

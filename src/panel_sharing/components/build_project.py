@@ -50,7 +50,7 @@ class ProjectBuilder(pn.viewable.Viewer):
         )
         self.open_developer_link_button = pn.widgets.Button.from_param(
             self.param.open_developer_link,
-            name="🔗 OPEN",
+            name="🔗 Open",
             width=125,
             sizing_mode="fixed",
             align="end",
@@ -62,7 +62,7 @@ class ProjectBuilder(pn.viewable.Viewer):
             width=125,
             button_type="light",
             sizing_mode="fixed",
-            label="📁 DOWNLOAD",
+            label="📁 Download",
             align="end",
         )
 

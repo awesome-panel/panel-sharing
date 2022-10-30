@@ -168,3 +168,4 @@ apps/prod/
 pyodide/
 src/panel_sharing/models.py
 .env*
+!src/panel_sharing/examples/**

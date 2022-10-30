@@ -129,7 +129,9 @@ class OAuth(pn.viewable.Viewer):
                 self.param.log_out,
                 # pn.widgets.TextInput.from_param(self.param.user),
             )
-        return pn.Column(self._jsactions, self.param.log_in)
+        return pn.Column(
+            self._jsactions, pn.widgets.Button.from_param(self.param.log_in, button_type="default")
+        )
 
     @property
     def configured(self) -> bool:

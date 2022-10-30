@@ -33,7 +33,7 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
         super().__init__()
 
         layout = pn.Column(
-            pn.pane.Markdown("## 🎁 Examples\nClick a button to select an example"),
+            pn.pane.Markdown("## 🎁 Examples\nClick a button below to select an example", margin=0),
             sizing_mode="stretch_width",
         )
 
@@ -42,7 +42,7 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
         self.value = self._examples_map.get("Welcome", examples[0])
 
         for example in examples:
-            button = pn.widgets.Button(name=example.name, button_type="success")
+            button = pn.widgets.Button(name=example.name, button_type="light")
 
             button.on_click(self._click_handler)
             layout.append(button)
