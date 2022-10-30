@@ -100,6 +100,8 @@ class OAuth(pn.viewable.Viewer):
     user = param.String(constant=True)
     access_token = param.String(constant=True)
 
+    state = param.String(constant=True)
+
     def __init__(self, **params):
         params["user_info"] = params.get("user_info", {})
         params["user"] = params.get("user", "")
@@ -147,6 +149,7 @@ class OAuth(pn.viewable.Viewer):
                 with param.edit_constant(self):
                     self.user_info = json.loads(user_info)
                     self.user = self.user_info["login"]
+                    print("login")
 
     def _set_secure_cookie(self, name, value, days=10):
         signed_value = create_signed_value(self._cookie_secret, name, value).decode("utf8")
@@ -166,17 +169,17 @@ class OAuth(pn.viewable.Viewer):
         return bool(self._get_secure_cookie("state") == state and state)
 
     def _create_state(self):
-        state = str(uuid.uuid4())
-        self._set_secure_cookie("state", state, days=1.0 / 24 / 60 / 6)
-        return state
+        with param.edit_constant(self):
+            self.state = str(uuid.uuid4())
+        self._set_secure_cookie("state", self.state, days=1.0 / 24 / 60 / 6)
+
+        return self.state
 
     @pn.depends("log_in", watch=True)
     def _log_in_handler(self, _=None):
         url = (
             "https://github.com/login/oauth/authorize"
-            # f"?redirect_uri={pn.state.location.href}"
             f"?client_id={self._client_id}"
-            # "&scope=photos",
             f"&state={self._create_state()}"
             f"&allow_signup=true"
         )
@@ -194,11 +197,14 @@ class OAuth(pn.viewable.Viewer):
 
     def _set_user_from_redirect(self):
         code = pn.state.session_args.get("code", [b""])[0].decode("utf8")
-        state = pn.state.session_args.get("state", [b""])[0].decode("utf8")
-        if self._is_valid(state=state) and code:
+        with param.edit_constant(self):
+            self.state = pn.state.session_args.get("state", [b""])[0].decode("utf8")
+        if self._is_valid(state=self.state) and code:
             access_token = self._get_access_token(code)
             if access_token:
                 self._set_user_from_access_token(access_token)
+        with param.edit_constant(self):
+            self.state = ""
 
     def _set_user_from_access_token(self, access_token):
         response = requests.get(

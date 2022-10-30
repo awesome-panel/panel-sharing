@@ -28,6 +28,9 @@ RAW_CSS = """
 }
 """
 
+if not "panel-sharing" in pn.state.cache:
+    pn.state.cache["panel-sharing"] = {"state": {}}
+
 
 def create():
     """Returns an instance of the Panel Sharing app
@@ -77,9 +80,29 @@ def create():
     source_pane = editor_tab
 
     target_pane = components.iframe(src=state.param.development_url)
-
-    authentication = components.Authentication(app_state=state)
     share_project = components.ShareProject(app_state=state, js_actions=project_builder.jsactions)
+
+    authentication = components.OAuth()
+
+    pn.bind(state.user.authenticate, name=authentication.param.user, watch=True)
+    state.user.authenticate(authentication.user)
+
+    @pn.depends(authentication.param.state, watch=True)
+    def handle_auth_state(state, app_state=state):
+        if not state:
+            return
+        cache = pn.state.cache["panel-sharing"]["state"]
+        if not state in cache:
+            cache[state] = {
+                "source": app_state.project.source.to_dict(),
+                "key": app_state.development_key,
+            }
+        else:
+            app_state.project.source.param.update(**cache[state]["source"])
+            app_state._set_development(cache[state]["key"]) # pylint: disable=protected-access
+
+    login_state = pn.state.session_args.get("state", [b""])[0].decode("utf8")
+    handle_auth_state(login_state)
 
     template = pn.template.FastGridTemplate(
         site=state.site.name,

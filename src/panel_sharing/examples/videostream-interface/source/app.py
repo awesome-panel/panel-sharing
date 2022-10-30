@@ -104,7 +104,6 @@ class ImageTransform(pn.viewable.Viewer):
         self.view = self.create_view()
 
     def __panel__(self):
-        print("__panel__", self.name)
         return self.view
 
     def run(self, image: str, height: int = HEIGHT, width: int = WIDTH) -> str:

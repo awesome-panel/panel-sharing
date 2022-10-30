@@ -116,7 +116,7 @@ README = """\
 The purpose of this project ...
 """
 
-USER_NAME = "guest"
+GUEST_USER_NAME = "guest"
 USER_NAME_REGEX = "^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$"
 PROJECT_NAME = "new"
 REPOSITORY_NAME = "new"

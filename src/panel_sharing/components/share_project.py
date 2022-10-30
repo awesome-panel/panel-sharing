@@ -19,6 +19,7 @@ By clicking the *share* button, I make my code **open source, free and MIT licen
 RAW_CSS = """
 #sidebar a.bk-btn.bk-btn-light {
     color: var(--neutral-foreground-rest);
+    padding-top: 5px !important;
 }
 """
 
@@ -69,6 +70,7 @@ class ShareProject(pn.viewable.Viewer):
             filename="build.zip",
             button_type="light",
             sizing_mode="stretch_width",
+            height=30,
             label="📁 DOWNLOAD",
             align="end",
         )

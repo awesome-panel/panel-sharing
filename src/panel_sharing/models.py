@@ -79,6 +79,15 @@ class Source(param.Parameterized):
         source.requirements = (path / "requirements.txt").read_text()
         return source
 
+    def to_dict(self) -> Dict:
+        """Returns the source as a dict"""
+        return {
+            "code": self.code,
+            "readme": self.readme,
+            "thumbnail": self.thumbnail,
+            "requirements": self.requirements,
+        }
+
 
 class Project(param.Parameterized):
     """A project consists of configuration and source files"""
@@ -171,7 +180,7 @@ class Project(param.Parameterized):
 class User(param.Parameterized):
     """A User of the site"""
 
-    name = param.String(config.USER_NAME, constant=True, regex=config.USER_NAME_REGEX)
+    name = param.String(config.GUEST_USER_NAME, constant=True, regex=config.USER_NAME_REGEX)
     authenticated = param.Boolean(config.AUTHENTICATED, constant=True)
 
     def __init__(self, **params):
@@ -179,10 +188,20 @@ class User(param.Parameterized):
 
         if "name" not in params:
             with param.edit_constant(self):
-                self.name = config.USER_NAME
+                self.name = config.GUEST_USER_NAME
 
     def __str__(self):
         return self.name
+
+    def authenticate(self, name):
+        """Authenticates the give name"""
+        with param.edit_constant(self):
+            if name and name != config.GUEST_USER_NAME:
+                self.name = name
+                self.authenticated = True
+            else:
+                self.name = config.GUEST_USER_NAME
+                self.authenticated = False
 
 
 class Storage(param.Parameterized):
