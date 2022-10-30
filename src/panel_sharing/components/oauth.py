@@ -91,9 +91,9 @@ class OAuth(pn.viewable.Viewer):
       - `PANEL_COOKIE_SECRET`
     """
 
-    log_in = param.Event(label="🔒 Log in")
+    log_in = param.Event(label="Log in via Github")
     log_out = param.Event(
-        label="🔓 Log out",
+        label="Log out",
     )
 
     user_info = param.Dict(constant=True)
@@ -127,7 +127,7 @@ class OAuth(pn.viewable.Viewer):
             return pn.Column(
                 self._jsactions,
                 self.param.log_out,
-                pn.widgets.TextInput.from_param(self.param.user),
+                # pn.widgets.TextInput.from_param(self.param.user),
             )
         return pn.Column(self._jsactions, self.param.log_in)
 

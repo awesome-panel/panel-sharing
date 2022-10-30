@@ -13,7 +13,7 @@ Please login to enable sharing.
 LICENSE_TEXT = """\
 ## 🌎 Share
 
-By clicking the *share* button, I make my code **open source, free and MIT licensed**.
+By clicking the *Share* button, I make my code **open source, free and MIT licensed**.
 """
 
 RAW_CSS = """
@@ -43,10 +43,10 @@ class ShareProject(pn.viewable.Viewer):
         self.reset = self._reset
         self.share_button = pn.widgets.Button.from_param(
             self.param.share,
-            name="❤️ Share",
+            name="Share",
             sizing_mode="stretch_width",
             align="end",
-            button_type="success",
+            button_type="primary",
         )
         self.project = pn.widgets.TextInput.from_param(
             self.app_state.project.param.name, name="Project"
@@ -104,9 +104,15 @@ class ShareProject(pn.viewable.Viewer):
         if not self.app_state.user.authenticated:
             return pn.Column(pn.pane.Markdown(LOGIN_TEXT))
         if not self.shared_url:
-            return pn.Column(pn.pane.Markdown(LICENSE_TEXT), self.project, self.share_button)
+            return pn.Column(
+                pn.pane.Markdown(LICENSE_TEXT),
+                pn.widgets.TextInput.from_param(self.app_state.user.param.name, name="User"),
+                self.project,
+                self.share_button,
+            )
         return pn.Column(
             pn.pane.Markdown(LICENSE_TEXT),
+            pn.widgets.TextInput.from_param(self.app_state.user.param.name, name="User"),
             self.project,
             self.share_button,
             self.copy_shared_link_button,

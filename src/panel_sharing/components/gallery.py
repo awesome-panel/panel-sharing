@@ -33,7 +33,7 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
         super().__init__()
 
         layout = pn.Column(
-            pn.pane.Markdown("## 🎁 Examples"),
+            pn.pane.Markdown("## 🎁 Examples\nClick a button to select an example"),
             sizing_mode="stretch_width",
         )
 

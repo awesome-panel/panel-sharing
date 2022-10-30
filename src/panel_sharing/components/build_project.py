@@ -43,7 +43,7 @@ class ProjectBuilder(pn.viewable.Viewer):
     def _get_panel(self):
         self.convert_button = pn.widgets.Button.from_param(
             self.param.convert,
-            name="🏃 Convert",
+            name="Convert",
             sizing_mode="stretch_width",
             align="end",
             button_type="primary",

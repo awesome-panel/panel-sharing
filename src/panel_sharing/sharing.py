@@ -12,13 +12,6 @@ from panel_sharing.utils import (
     notify_app_key_not_found,
 )
 
-README = """## 📖 About
-
-This is a first **prototype**.
-
-**Your code and apps will be lost** when Panel Sharing is updated. Stay tuned for persisted
-code and apps."""
-
 RAW_CSS = """
 .sidenav a {
     padding: 0px !important;
@@ -99,7 +92,7 @@ def create():
             }
         else:
             app_state.project.source.param.update(**cache[state]["source"])
-            app_state._set_development(cache[state]["key"]) # pylint: disable=protected-access
+            app_state._set_development(cache[state]["key"])  # pylint: disable=protected-access
 
     login_state = pn.state.session_args.get("state", [b""])[0].decode("utf8")
     handle_auth_state(login_state)
@@ -113,9 +106,8 @@ def create():
         site_url="https://awesome-panel.org",
         favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",  # pylint: disable=line-too-long
         sidebar=[
-            pn.Column(pn.pane.Markdown(README)),
-            authentication,
             share_project,
+            authentication,
             gallery,
             project_builder.jsactions,
         ],
