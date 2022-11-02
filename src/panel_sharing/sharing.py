@@ -4,11 +4,12 @@ from __future__ import annotations
 import panel as pn
 
 from panel_sharing import components
-from panel_sharing.models import AppState
+from panel_sharing.models import AppState, Project
 from panel_sharing.utils import (
     exception_handler,
     get_app_key,
     get_example_key,
+    get_project_key,
     notify_app_key_not_found,
 )
 
@@ -23,6 +24,38 @@ RAW_CSS = """
 
 if not "panel-sharing" in pn.state.cache:
     pn.state.cache["panel-sharing"] = {"state": {}}
+
+
+def _set_start_project(state, set_example, gallery):
+    key = get_app_key()
+    project = get_project_key()
+    example = get_example_key()
+    if key:
+        try:
+            state.set_project_from_app_key(key)
+        except:  # pylint: disable=bare-except
+            notify_app_key_not_found("app", key)
+            set_example(project=gallery.value)
+            pn.state.location.search = ""
+    elif project:
+        try:
+            project_ = Project.from_base64(project)
+            state.project.source.code = project_.source.code
+            state.project.source.requirements = project_.source.requirements
+            state.project.source.readme = project_.source.readme
+            state.project.source.thumbnail = project_.source.thumbnail
+            pn.state.onload(state.build)
+        except:  # pylint: disable=bare-except
+            notify_app_key_not_found("project", key)
+            set_example(project=gallery.value)
+            pn.state.location.search = ""
+    else:
+        try:
+            set_example(project=gallery.get(example))
+        except:  # pylint: disable=bare-except
+            notify_app_key_not_found("example", key)
+            set_example(project=gallery.value)
+            pn.state.location.search = ""
 
 
 def create():
@@ -47,24 +80,7 @@ def create():
         pn.state.location.search = ""
         pn.state.location.update_query(example=project.name)
 
-    key = get_app_key()
-    example = get_example_key()
-    if key:
-        try:
-            state.set_project_from_app_key(key)
-            pn.state.location.search = ""
-            pn.state.location.update_query(app=key)
-        except:  # pylint: disable=bare-except
-            notify_app_key_not_found("app", key)
-            set_example(project=gallery.value)
-            pn.state.location.search = ""
-    else:
-        try:
-            set_example(project=gallery.get(example))
-        except:  # pylint: disable=bare-except
-            notify_app_key_not_found("example", key)
-            set_example(project=gallery.value)
-            pn.state.location.search = ""
+    _set_start_project(state, set_example, gallery)
 
     project_builder = components.ProjectBuilder(state=state)
     source_editor = components.SourceEditor(source=state.project.source)

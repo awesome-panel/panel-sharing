@@ -1,5 +1,6 @@
 """Base models for Panel Sharing"""
 # Should not contain any Panel UI elements
+import base64
 import json
 import multiprocessing
 import pathlib
@@ -84,7 +85,7 @@ class Source(param.Parameterized):
         return {
             "code": self.code,
             "readme": self.readme,
-            "thumbnail": self.thumbnail,
+            # "thumbnail": self.thumbnail,
             "requirements": self.requirements,
         }
 
@@ -170,11 +171,43 @@ class Project(param.Parameterized):
 
             self.save_build_json(kwargs)
             process.join()
-        if base_target != "" or True:
+        if base_target != "":
             app_html = pathlib.Path("build/app.html")
             text = app_html.read_text(encoding="utf8")
             text = text.replace("<head>", "<head><base target='_blank' />")
             app_html.write_text(text, encoding="utf8")
+
+    def to_dict(self):
+        """Returns the project as a dictionary"""
+        return {
+            "source": self.source.to_dict()
+        }
+
+    def to_base64(self):
+        """Returns the project base64 encoded"""
+        value = json.dumps(self.to_dict(), separators=(',', ':'))
+        result = base64.b64encode(value.encode(encoding="utf8")).decode(encoding="utf8")
+        print("base64 len", len(result))
+        return result
+
+    @classmethod
+    def from_dict(cls, value: Dict) -> 'Project':
+        """Returns a project from the value provided"""
+        source = value.pop("source")
+        return Project(
+            source=Source(**source)
+        )
+
+    @classmethod
+    def from_base64(cls, value: str) -> 'Project':
+        """Returns a project from the base64 value"""
+        value_dict = json.loads(base64.b64decode(value).decode(encoding="utf8"))
+        return cls.from_dict(value_dict)
+
+    def __eq__(self, other):
+        return isinstance(other, Project) and self.to_dict()==other.to_dict()
+
+
 
 
 class User(param.Parameterized):

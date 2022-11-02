@@ -4,13 +4,14 @@ from __future__ import annotations
 import json
 import logging
 import os
-import urllib.parse as urlparse
 import uuid
 
 import panel as pn
 import param
 import requests
 from tornado.web import create_signed_value, decode_signed_value
+
+from panel_sharing.utils import del_query_params
 
 logger = logging.getLogger()
 
@@ -208,6 +209,12 @@ class OAuth(pn.viewable.Viewer):
         with param.edit_constant(self):
             self.state = ""
 
+        def on_load():
+            self._delete_secure_cookie("state")
+            del_query_params("state", "code")
+
+        pn.state.onload(on_load)
+
     def _set_user_from_access_token(self, access_token):
         response = requests.get(
             url="https://api.github.com/user",
@@ -227,14 +234,6 @@ class OAuth(pn.viewable.Viewer):
                 def on_load():
                     self._set_secure_cookie("access_token", self.access_token, days=10)
                     self._set_secure_cookie(name="user_info", value=json.dumps(self.user_info))
-                    self._delete_secure_cookie("state")
-                    if pn.state.location:
-                        query = pn.state.location.query_params
-                        if "code" in query:
-                            del query["code"]
-                        if "state" in query:
-                            del query["state"]
-                        pn.state.location.search = "?" + urlparse.urlencode(query)
 
                 pn.state.onload(on_load)
             print(f"{self.user_info['html_url']} logged in successfully")

@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from panel_sharing import config
-from panel_sharing.models import Project
+from panel_sharing.models import Project, Source
 from panel_sharing.utils import set_directory
 
 
@@ -29,3 +29,17 @@ def test_save_read(tmpdir):
         project.save()
         new_project = Project.read()
     assert project.source.code == new_project.source.code
+
+
+def test_base64():
+    """We can convert a project to and from base64"""
+    project = Project(
+        name="Hello",
+        source=Source(
+            code="import panel",
+            readme="# Intro",
+            requirements="panel",
+        ),
+    )
+    new_project = Project.from_base64(project.to_base64())
+    assert new_project == project

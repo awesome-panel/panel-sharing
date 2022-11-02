@@ -2,6 +2,7 @@
 import logging
 import os
 import time
+import urllib.parse as urlparse
 from contextlib import ContextDecorator, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -10,6 +11,7 @@ from typing import Any, Callable, ClassVar, Dict, Optional
 import panel as pn
 
 APP_KEY_PARAMETER = "app"
+PROJECT_KEY_PARAMETER = "project"
 DEFAULT_APP = ""
 EXAMPLE_KEY_PARAMETER = "example"
 DEFAULT_EXAMPLE = "Welcome"
@@ -54,6 +56,13 @@ def _get_app_key(key: str, session_args: Dict, default=""):
 def get_app_key(default=DEFAULT_APP):
     """Returns the value of the app session arg or the default value"""
     return _get_app_key(key=APP_KEY_PARAMETER, session_args=pn.state.session_args, default=default)
+
+
+def get_project_key(default=""):
+    """Returns the value of the project session arg or the default value"""
+    return _get_app_key(
+        key=PROJECT_KEY_PARAMETER, session_args=pn.state.session_args, default=default
+    )
 
 
 def get_example_key(default=DEFAULT_EXAMPLE):
@@ -126,3 +135,14 @@ class Timer(ContextDecorator):
     def __exit__(self, *exc_info: Any) -> None:
         """Stop the context manager timer"""
         self.stop()
+
+
+def del_query_params(*args):
+    """Deletes the query arguments"""
+    if not args:
+        args = ("code", "state", "example", "project", "app")
+    query = pn.state.location.query_params
+    for parameter in args:
+        if parameter in query:
+            del query[parameter]
+    pn.state.location.search = "?" + urlparse.urlencode(query)
