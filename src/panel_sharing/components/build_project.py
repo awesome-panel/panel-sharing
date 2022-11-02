@@ -3,6 +3,7 @@ import panel as pn
 import param
 
 from panel_sharing.components.js_actions import JSActions
+from panel_sharing.utils import del_query_params
 
 
 class ProjectBuilder(pn.viewable.Viewer):
@@ -31,6 +32,9 @@ class ProjectBuilder(pn.viewable.Viewer):
 
         if pn.state.notifications:
             pn.state.notifications.success("Build succeeded")
+
+        del_query_params()
+        pn.state.location.update_query(project=self._state.project.to_base64())
 
     @pn.depends("open_developer_link", watch=True)
     def _open_developer_link(self):
