@@ -1,4 +1,6 @@
 """Default values and other configuration values"""
+import os
+
 SITE = "Awesome Panel"
 TITLE = "Panel Sharing"
 
@@ -92,6 +94,10 @@ GUEST_USER_NAME = "guest"
 USER_NAME_REGEX = "^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$"
 PROJECT_NAME = "new"
 REPOSITORY_NAME = "new"
+AZURE_BLOB_URL = "https://awesomepanel.blob.core.windows.net/"
+AZURE_PROJECT_CONTAINER_NAME = "project"
+AZURE_WEB_CONTAINER_NAME = "$web"
+AZURE_BLOB_CONN_STR = os.getenv("AZURE_BLOB_CONN_STR", "")
 
 AUTHENTICATED = False
 

@@ -1,5 +1,7 @@
 """Base models for Panel Sharing"""
 # Should not contain any Panel UI elements
+from __future__ import annotations
+
 import base64
 import json
 import multiprocessing
@@ -12,6 +14,8 @@ from pathlib import Path
 from typing import Dict
 
 import param
+from azure.core.exceptions import ResourceNotFoundError
+from azure.storage.blob import BlobServiceClient, ContentSettings
 from panel import __version__
 from panel.io.convert import convert_app
 
@@ -95,6 +99,17 @@ class Project(param.Parameterized):
 
     name = param.String(config.PROJECT_NAME)
     source = param.ClassSelector(class_=Source)
+    files = param.Tuple(
+        default=(
+            "build.json",
+            "source/app.py",
+            "source/requirements.txt",
+            "source/readme.md",
+            "source/thumbnail.png",
+            "build/app.html",
+            "build/app.js",
+        )
+    )
 
     def __init__(self, **params):
         if "source" not in params:
@@ -179,35 +194,29 @@ class Project(param.Parameterized):
 
     def to_dict(self):
         """Returns the project as a dictionary"""
-        return {
-            "source": self.source.to_dict()
-        }
+        return {"source": self.source.to_dict()}
 
     def to_base64(self):
         """Returns the project base64 encoded"""
-        value = json.dumps(self.to_dict(), separators=(',', ':'))
+        value = json.dumps(self.to_dict(), separators=(",", ":"))
         result = base64.b64encode(value.encode(encoding="utf8")).decode(encoding="utf8")
         print("base64 len", len(result))
         return result
 
     @classmethod
-    def from_dict(cls, value: Dict) -> 'Project':
+    def from_dict(cls, value: Dict) -> "Project":
         """Returns a project from the value provided"""
         source = value.pop("source")
-        return Project(
-            source=Source(**source)
-        )
+        return Project(source=Source(**source))
 
     @classmethod
-    def from_base64(cls, value: str) -> 'Project':
+    def from_base64(cls, value: str) -> "Project":
         """Returns a project from the base64 value"""
         value_dict = json.loads(base64.b64decode(value).decode(encoding="utf8"))
         return cls.from_dict(value_dict)
 
     def __eq__(self, other):
-        return isinstance(other, Project) and self.to_dict()==other.to_dict()
-
-
+        return isinstance(other, Project) and self.to_dict() == other.to_dict()
 
 
 class User(param.Parameterized):
@@ -255,6 +264,10 @@ class Storage(param.Parameterized):
 
     def copy(self, key: str, source: Path):
         """Copy the source project to the specified key"""
+        raise NotImplementedError()
+
+    def get_zipped_folder(self, key) -> BytesIO:
+        """Returns the project as a .zip folder"""
         raise NotImplementedError()
 
 
@@ -337,11 +350,100 @@ class TmpFileStorage(FileStorage):
 class AzureBlobStorage(Storage):
     """An Azure Blob Storage"""
 
-    def __getitem__(self, key):
-        raise NotImplementedError()
+    base_target = param.Selector(default="", objects=["", "_blank"])
+    blob_url = param.String(default=config.AZURE_BLOB_URL)
+    project_container_name = param.String(default=config.AZURE_PROJECT_CONTAINER_NAME)
+    web_container_name = param.String(default=config.AZURE_WEB_CONTAINER_NAME)
+    conn_str = param.String(default=config.AZURE_BLOB_CONN_STR)
 
-    def __setitem__(self, key, value):
-        raise NotImplementedError()
+    def __init__(self, **params):
+        super().__init__(**params)
+
+        if not self.conn_str:
+            raise ValueError("Error. No conn_str provided!")
+
+        # Create the BlobServiceClient object
+        self.service_client = BlobServiceClient.from_connection_string(self.conn_str)
+        self.project_container_client = self.service_client.get_container_client(
+            self.project_container_name
+        )
+        self.web_container_client = self.service_client.get_container_client(
+            self.web_container_name
+        )
+
+    def __getitem__(self, key):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with set_directory(Path(tmpdir)):
+                self._save_locally(key)
+                return Project.read()
+
+    def _save_locally(self, key: str):
+        prefix = key + "/"
+
+        project_generator = self.project_container_client.list_blobs(name_starts_with=prefix)
+        for blob in project_generator:
+            file = blob.name.replace(prefix, "")
+            Path(file).parent.mkdir(parents=True, exist_ok=True)
+            with open(file=file, mode="wb") as download_file:
+                download_file.write(
+                    self.project_container_client.download_blob(blob.name).readall()
+                )
+
+        web_generator = self.web_container_client.list_blobs(name_starts_with=prefix)
+        for blob in web_generator:
+            file = blob.name.replace(prefix, "build/")
+            Path(file).parent.mkdir(parents=True, exist_ok=True)
+            with open(file=file, mode="wb") as download_file:
+                try:
+                    download_file.write(
+                        self.web_container_client.download_blob(blob.name).readall()
+                    )
+                except ResourceNotFoundError as ex:
+                    raise Exception(
+                        f"The container {self.web_container_name} or blob {blob} was not found"
+                    ) from ex
+
+    @staticmethod
+    def _is_build_file(file: Path):
+        return str(file).startswith("build/")
+
+    def _get_container_name(self, file: Path):
+        if self._is_build_file(file):
+            return self.web_container_name
+        return self.project_container_name
+
+    def _get_file_path(self, file: Path):
+        if self._is_build_file(file):
+            return Path(file.name)
+        return file
+
+    def _get_blob(self, key: str, file: Path):
+        file_path = self._get_file_path(file)
+        return key + "/" + str(file_path)
+
+    def _get_blob_client(self, key: str, file: Path):
+        container_name = self._get_container_name(file)
+        blob = self._get_blob(key, file)
+        return self.service_client.get_blob_client(container=container_name, blob=blob)
+
+    def _get_content_settings(self, file: Path) -> ContentSettings | None:
+        if file.name.endswith("html"):
+            return ContentSettings(content_type="text/html")
+        return None
+
+    def __setitem__(self, key, value: Project):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with set_directory(Path(tmpdir)):
+                value.save()
+                value.build(self.base_target)
+                for file in Path().rglob("*"):
+                    if file.is_file():
+                        blob_client = self._get_blob_client(key=key, file=file)
+                        content_settings = self._get_content_settings(file)
+                        with open(file, mode="rb") as data:
+                            blob_client.upload_blob(
+                                data, overwrite=True, content_settings=content_settings
+                            )
 
     def __delitem__(self, key):
         raise NotImplementedError()
@@ -350,9 +452,34 @@ class AzureBlobStorage(Storage):
         """Returns the list of keys of the storage"""
         raise NotImplementedError()
 
-    def copy(self, key: str, source: Path):
-        """Copy the source project to the specified key"""
+    def get_zipped_folder(self, key) -> BytesIO:
+        #
+        """Returns the project as a .zip folder"""
         raise NotImplementedError()
+
+    def copy(self, key: str, source: Path):
+        raise NotImplementedError()
+        # project = self._get_project_path(key)
+        # www = self._get_www_path(key)
+        # self._move_locally(source, project, www)
+
+    def delete(self, key):
+        """Delete the key"""
+        for file_ in Project.files:
+            file = Path(file_)
+            blob = self._get_blob(key=key, file=file)
+            container_name = self._get_container_name(file)
+            blob_client = self.service_client.get_blob_client(
+                container=container_name, blob=blob
+            )
+            blob_client.delete_blob(snapshot=None)
+
+    def get_url(self, key, file):
+        """Returns the app url of the given key and file"""
+        file = Path(file)
+        container_name = self._get_container_name(file)
+        file_path = self._get_file_path(file)
+        return self.blob_url + container_name + "/" + key + "/" + str(file_path)
 
 
 class Site(param.Parameterized):
