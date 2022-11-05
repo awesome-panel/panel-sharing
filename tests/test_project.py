@@ -1,4 +1,5 @@
 """We can work with a Project"""
+from io import BytesIO
 from pathlib import Path
 
 from panel_sharing import config
@@ -43,3 +44,22 @@ def test_base64():
     )
     new_project = Project.from_base64(project.to_base64())
     assert new_project == project
+
+
+def test_to_zip_folder():
+    """We can convert between projects and zip folders"""
+    # Given
+    project = Project(
+        source=Source(
+            code="import panel as pn;pn.extension();pn.panel('hello').servable()",
+            requirements="panel",
+        )
+    )
+    # When
+    zip_folder = project.to_zip_folder()
+    # Assert
+    assert isinstance(zip_folder, BytesIO)
+    # When
+    new_project = Project.from_zip_folder(zip_folder)
+    # Then
+    assert project == new_project

@@ -78,8 +78,7 @@ class ShareProject(pn.viewable.Viewer):
             pn.config.raw_css.append(RAW_CSS)
 
     def _download_callback(self):
-        key = self.app_state.shared_key
-        return self.app_state.site.production_storage.get_zipped_folder(key=key)
+        return self.app_state.project.to_zip_folder()
 
     @pn.depends("share", watch=True)
     def _share(self):

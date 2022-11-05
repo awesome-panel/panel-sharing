@@ -218,6 +218,31 @@ class Project(param.Parameterized):
     def __eq__(self, other):
         return isinstance(other, Project) and self.to_dict() == other.to_dict()
 
+    def to_zip_folder(self) -> BytesIO:
+        """Returns the project as a .zip folder"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with set_directory(pathlib.Path(tmpdir)):
+                with set_directory(pathlib.Path("project")):
+                    self.save()
+                    self.build()
+                target_file = "saved"
+                result = shutil.make_archive(
+                    target_file, "zip", root_dir=Path("project").absolute()
+                )
+                with open(result, "rb") as file:
+                    return BytesIO(file.read())
+
+    @staticmethod
+    def from_zip_folder(zip_folder: BytesIO):
+        """Creates a Project from a zip_folder"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with set_directory(pathlib.Path(tmpdir)):
+                target_file = "saved.zip"
+                with open(target_file, "wb") as file:
+                    file.write(zip_folder.getbuffer())
+                    shutil.unpack_archive(target_file, format="zip")
+                    return Project.read()
+
 
 class User(param.Parameterized):
     """A User of the site"""
@@ -262,12 +287,8 @@ class Storage(param.Parameterized):
         """Returns the list of keys of the storage"""
         raise NotImplementedError()
 
-    def copy(self, key: str, source: Path):
+    def copy(self, key: str, project: Project):
         """Copy the source project to the specified key"""
-        raise NotImplementedError()
-
-    def get_zipped_folder(self, key) -> BytesIO:
-        """Returns the project as a .zip folder"""
         raise NotImplementedError()
 
 
@@ -312,26 +333,22 @@ class FileStorage(Storage):
 
             self._move_locally(tmppath, project, www)
 
-    def copy(self, key: str, source: Path):
-        project = self._get_project_path(key)
-        www = self._get_www_path(key)
-        self._move_locally(source, project, www)
+    def copy(self, key: str, project: Project):
+        project_dir = self._get_project_path(key)
+        www_dir = self._get_www_path(key)
+
+        with tempfile.TemporaryDirectory() as source:
+            source_path = Path(source)
+            with set_directory(source_path):
+                project.save()
+                project.build()
+                self._move_locally(source_path, project_dir, www_dir)
 
     def __delitem__(self, key):
         raise NotImplementedError()
 
     def keys(self):
         raise NotImplementedError()
-
-    def get_zipped_folder(self, key) -> BytesIO:
-        """Returns the project as a .zip folder"""
-        source = self._get_project_path(key).absolute()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            with set_directory(pathlib.Path(tmpdir)):
-                target_file = "saved"
-                result = shutil.make_archive(target_file, "zip", source)
-                with open(result, "rb") as file:
-                    return BytesIO(file.read())
 
 
 class TmpFileStorage(FileStorage):
@@ -352,6 +369,7 @@ class AzureBlobStorage(Storage):
 
     base_target = param.Selector(default="", objects=["", "_blank"])
     blob_url = param.String(default=config.AZURE_BLOB_URL)
+    web_url = param.String(default=config.AZURE_WEB_URL)
     project_container_name = param.String(default=config.AZURE_PROJECT_CONTAINER_NAME)
     web_container_name = param.String(default=config.AZURE_WEB_CONTAINER_NAME)
     conn_str = param.String(default=config.AZURE_BLOB_CONN_STR)
@@ -452,12 +470,7 @@ class AzureBlobStorage(Storage):
         """Returns the list of keys of the storage"""
         raise NotImplementedError()
 
-    def get_zipped_folder(self, key) -> BytesIO:
-        #
-        """Returns the project as a .zip folder"""
-        raise NotImplementedError()
-
-    def copy(self, key: str, source: Path):
+    def copy(self, key: str, project: Project):
         raise NotImplementedError()
         # project = self._get_project_path(key)
         # www = self._get_www_path(key)
@@ -469,9 +482,7 @@ class AzureBlobStorage(Storage):
             file = Path(file_)
             blob = self._get_blob(key=key, file=file)
             container_name = self._get_container_name(file)
-            blob_client = self.service_client.get_blob_client(
-                container=container_name, blob=blob
-            )
+            blob_client = self.service_client.get_blob_client(container=container_name, blob=blob)
             blob_client.delete_blob(snapshot=None)
 
     def get_url(self, key, file):
@@ -479,21 +490,22 @@ class AzureBlobStorage(Storage):
         file = Path(file)
         container_name = self._get_container_name(file)
         file_path = self._get_file_path(file)
+        if container_name == "$web":
+            return self.web_url + key + "/" + str(file_path)
         return self.blob_url + container_name + "/" + key + "/" + str(file_path)
-
 
 class Site(param.Parameterized):
     """A site like awesome-panel.org. But could also be another site"""
 
-    name = param.String(config.SITE, constant=True)
-    title = param.String(config.TITLE, constant=True)
-    faq = param.String(config.FAQ, constant=True)
-    about = param.String(config.ABOUT, constant=True)
-    thumbnail = param.String(config.THUMBNAIL, constant=True)
+    name: str = param.String(config.SITE, constant=True)
+    title: str = param.String(config.TITLE, constant=True)
+    faq: str = param.String(config.FAQ, constant=True)
+    about: str = param.String(config.ABOUT, constant=True)
+    thumbnail: str = param.String(config.THUMBNAIL, constant=True)
 
-    development_storage = param.ClassSelector(class_=Storage, constant=True)
-    examples_storage = param.ClassSelector(class_=Storage, constant=True)
-    production_storage = param.ClassSelector(class_=Storage, constant=True)
+    development_storage: Storage = param.ClassSelector(class_=Storage, constant=True)
+    examples_storage: Storage = param.ClassSelector(class_=Storage, constant=True)
+    production_storage: Storage = param.ClassSelector(class_=Storage, constant=True)
 
     auth_provider = param.Parameter(constant=True)
 
@@ -517,6 +529,8 @@ class Site(param.Parameterized):
 
     def get_shared_src(self, key):
         """Returns the shared url"""
+        if isinstance(self.production_storage, AzureBlobStorage):
+            return self.production_storage.get_url(key, "build/app.html")
         return f"apps/{key}/app.html"
 
     def get_development_src(self, key):
@@ -569,14 +583,14 @@ class AppState(param.Parameterized):
     def _get_random_key(self):
         return str(uuid.uuid4())
 
-    def copy(self, project: Project, source: Path):
+    def copy(self, project: Project):
         """Copies the project from the source path"""
         self.project.source.code = project.source.code
         self.project.source.readme = project.source.readme
         self.project.source.requirements = project.source.requirements
 
         key = self._get_random_key()
-        self.site.development_storage.copy(key=key, source=source)
+        self.site.development_storage.copy(key=key, project=self.project)
         self._set_development(key)
 
     def build(self):
@@ -605,7 +619,7 @@ class AppState(param.Parameterized):
         with param.edit_constant(self.user):
             self.user.authenticated = False
 
-    def set_project_from_app_key(self, key):
+    def set_dev_project_from_shared_app(self, key):
         """Set the current project from an app key"""
         project = self.site.production_storage[key]
 
@@ -614,9 +628,9 @@ class AppState(param.Parameterized):
         self.project.source.requirements = project.source.requirements
 
         # pylint: disable=protected-access
-        source = self.site.production_storage._path / "projects" / key
         key = self._get_random_key()
-        self.site.development_storage.copy(key=key, source=source)
+
+        self.site.development_storage.copy(key=key, project=project)
         self._set_development(key)
 
 

@@ -4,12 +4,13 @@ from urllib.request import urlopen
 
 import pytest
 
-from panel_sharing.models import AzureBlobStorage, Project, Source
+from panel_sharing.models import AppState, AzureBlobStorage, Project, Site, Source
 
 # pylint: disable=redefined-outer-name,protected-access
 
 PROJECT_CONTAINER_NAME = "test-project"
 WEB_CONTAINER_NAME = "test-web"
+WEB_URL = "https://awesomepanelsharing.blob.core.windows.net/test-web/"
 
 
 @pytest.fixture
@@ -22,8 +23,17 @@ def key():
 def azure_blob_storage():
     """Returns an AzureBlobStorage"""
     return AzureBlobStorage(
-        project_container_name=PROJECT_CONTAINER_NAME, web_container_name=WEB_CONTAINER_NAME
+        project_container_name=PROJECT_CONTAINER_NAME,
+        web_container_name=WEB_CONTAINER_NAME,
+        web_url=WEB_URL,
     )
+
+
+@pytest.fixture()
+def state(azure_blob_storage):
+    """Returns an AppState relying on a production AzureBlobStorage"""
+    site = Site(production_storage=azure_blob_storage)
+    return AppState(site=site)
 
 
 @pytest.fixture()
@@ -90,3 +100,23 @@ def test_set_and_get(key: str, azure_blob_storage: AzureBlobStorage, project: Pr
             if url.startswith("https://"):
                 with urlopen(url):  # nosec
                     pass
+
+
+def test_state_site_get_shared_src(key: str, state: AppState):
+    """We can get the right src for a shared app"""
+    assert state.site.get_shared_src(key) == f"{WEB_URL}{key}/app.html"
+
+
+def test_set_dev_project_from_shared_app(key: str, state: AppState, project: Project):
+    """We can set the current dev project from a shared app key"""
+    # Given
+    state.site.production_storage[key] = project
+    state.development_url = ""
+    state.development_key = ""
+    # When
+    state.set_dev_project_from_shared_app(key)
+    # Then
+    assert state.development_url
+    assert state.development_key
+    # Clean Up
+    state.site.production_storage.delete(key)

@@ -41,8 +41,7 @@ class ProjectBuilder(pn.viewable.Viewer):
         self.jsactions.open(url=self._state.development_url)
 
     def _download_callback(self):
-        key = self._state.development_key
-        return self._state.site.development_storage.get_zipped_folder(key=key)
+        return self._state.project.to_zipped_folder()
 
     def _get_panel(self):
         self.convert_button = pn.widgets.Button.from_param(

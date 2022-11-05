@@ -4,7 +4,7 @@ from __future__ import annotations
 import panel as pn
 
 from panel_sharing import components
-from panel_sharing.models import AppState, Project
+from panel_sharing.models import AppState, AzureBlobStorage, Project, Site
 from panel_sharing.utils import (
     exception_handler,
     get_app_key,
@@ -32,7 +32,7 @@ def _set_start_project(state, set_example, gallery):
     example = get_example_key()
     if key:
         try:
-            state.set_project_from_app_key(key)
+            state.set_dev_project_from_shared_app(key)
         except:  # pylint: disable=bare-except
             notify_app_key_not_found("app", key)
             set_example(project=gallery.value)
@@ -70,13 +70,14 @@ def create():
         "ace", sizing_mode="stretch_width", notifications=True, exception_handler=exception_handler
     )
 
-    state = AppState()
+    site = Site(production_storage=AzureBlobStorage())
+    state = AppState(site=site)
 
     gallery = components.Gallery.read(state.examples)
 
     @pn.depends(gallery.param.value, watch=True)
     def set_example(project):
-        state.copy(project, source=state.examples / project.source.name)
+        state.copy(project)
         pn.state.location.search = ""
         pn.state.location.update_query(example=project.name)
 
