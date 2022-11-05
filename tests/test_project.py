@@ -13,13 +13,13 @@ def test_build(tmpdir):
     project.code = config.CODE
     project.requirements = config.REQUIREMENTS
     with set_directory(Path(tmpdir)):
-        project.save()
         project.build()
-        assert Path("build.json").exists()
         assert Path("source/app.py").exists()
         assert Path("source/readme.md").exists()
         assert Path("source/requirements.txt").exists()
+        assert Path("build/config.json").exists()
         assert Path("build/app.html").exists()
+        assert Path("build/app.js").exists()
 
 
 def test_save_read(tmpdir):
@@ -27,7 +27,11 @@ def test_save_read(tmpdir):
     project = Project()
     project.source.code = "import panel"
     with set_directory(Path(tmpdir)):
+        assert Path.cwd().exists()
         project.save()
+        assert Path.cwd().exists()
+        assert (Path(tmpdir) / "source/app.py").exists()
+
         new_project = Project.read()
     assert project.source.code == new_project.source.code
 
@@ -63,3 +67,13 @@ def test_to_zip_folder():
     new_project = Project.from_zip_folder(zip_folder)
     # Then
     assert project == new_project
+
+
+def test_tmpdir_deleted():
+    """The tmpdir is deleted when the Project is deleted"""
+    project = Project()
+    tmpdir = project._tmpdir.name  # pylint: disable=protected-access
+    assert tmpdir
+    assert Path(tmpdir).exists()
+    del project
+    assert not Path(tmpdir).exists()

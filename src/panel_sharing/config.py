@@ -2,7 +2,7 @@
 import os
 
 SITE = "Awesome Panel"
-TITLE = "Panel Sharing"
+TITLE = "Panel Sharing Prototype"
 
 FAQ = """
 # Frequently Asked Questions

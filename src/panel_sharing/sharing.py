@@ -1,6 +1,8 @@
 """Create the Awesome Panel Sharing App"""
 from __future__ import annotations
 
+from pathlib import Path
+
 import panel as pn
 
 from panel_sharing import components
@@ -24,6 +26,13 @@ RAW_CSS = """
 
 if not "panel-sharing" in pn.state.cache:
     pn.state.cache["panel-sharing"] = {"state": {}}
+
+
+@pn.cache
+def get_examples(examples: str):
+    """Returns a list of example Projects"""
+    # pylint: disable=protected-access
+    return list(components.Gallery.read(Path(examples))._examples_map.values())
 
 
 def _set_start_project(state, set_example, gallery):
@@ -73,10 +82,11 @@ def create():
     site = Site(production_storage=AzureBlobStorage())
     state = AppState(site=site)
 
-    gallery = components.Gallery.read(state.examples)
+    gallery = components.Gallery(examples=get_examples(str(state.examples.absolute())))
 
     @pn.depends(gallery.param.value, watch=True)
     def set_example(project):
+        project.build()
         state.copy(project)
         pn.state.location.search = ""
         pn.state.location.update_query(example=project.name)

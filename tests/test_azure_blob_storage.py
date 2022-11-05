@@ -52,7 +52,7 @@ def project():
 @pytest.mark.parametrize(
     ["file", "is_build_file"],
     (
-        ("build.json", False),
+        ("config.json", False),
         ("source/app.py", False),
         ("source/requirements.txt", False),
         ("build/app.html", True),
@@ -67,7 +67,7 @@ def test_is_build_file(file, is_build_file, azure_blob_storage):
 @pytest.mark.parametrize(
     ["file", "container_name"],
     (
-        ("build.json", PROJECT_CONTAINER_NAME),
+        ("config.json", PROJECT_CONTAINER_NAME),
         ("source/app.py", PROJECT_CONTAINER_NAME),
         ("source/requirements.txt", PROJECT_CONTAINER_NAME),
         ("build/app.html", WEB_CONTAINER_NAME),

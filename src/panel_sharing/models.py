@@ -101,11 +101,11 @@ class Project(param.Parameterized):
     source = param.ClassSelector(class_=Source)
     files = param.Tuple(
         default=(
-            "build.json",
             "source/app.py",
             "source/requirements.txt",
             "source/readme.md",
             "source/thumbnail.png",
+            "build/config.json",
             "build/app.html",
             "build/app.js",
         )
@@ -114,12 +114,19 @@ class Project(param.Parameterized):
     def __init__(self, **params):
         if "source" not in params:
             params["source"] = Source()
-
         super().__init__(**params)
+
+        self._tmpdir = tempfile.TemporaryDirectory() # pylint: disable=consider-using-with
+        self._tmppath = Path(self._tmpdir.name)
+        self._save_hash = ""
+        self._build_hash = ""
 
         if "name" not in params:
             with param.edit_constant(self):
                 self.name = config.PROJECT_NAME
+
+    def __del__(self):
+        self._tmpdir.cleanup()
 
     def __str__(self):
         return self.name
@@ -132,10 +139,33 @@ class Project(param.Parameterized):
             project.source = Source.read()
         return project
 
+    @property
+    def _hash(self):
+        return hash(json.dumps(self.to_dict()))
+
+    def _reset_tmpdir(self):
+        self._save_hash=""
+        self._build_hash=""
+        for child in self._tmppath.iterdir():
+            if child.is_file():
+                child.unlink()
+            else:
+                shutil.rmtree(child)
+
+    def _save_to_tmpdir(self):
+        _hash = self._hash
+        if self._save_hash==_hash:
+            return
+
+        self._reset_tmpdir()
+        with set_directory(self._tmppath/"source"):
+            self.source.save()
+        self._save_hash = _hash
+
     def save(self):
         """Saves the project files to the current working directory"""
-        with set_directory(pathlib.Path() / "source"):
-            self.source.save()
+        self._save_to_tmpdir()
+        self._copy_from_tmpdir()
 
     def _get_requirements(self):
         requirements = pathlib.Path("source/requirements.txt")
@@ -168,29 +198,56 @@ class Project(param.Parameterized):
             "app_framework": {"panel": __version__},
             "build_kwargs": kwargs,
         }
-        with open("build.json", "w", encoding="utf8") as file:
+        with open("config.json", "w", encoding="utf8") as file:
             json.dump(obj=build_json, fp=file, indent=1)
+
+    def _remove_tmpbuilddir(self):
+        self._build_hash=""
+        tmpbuildpath = self._tmppath/"build"
+        if tmpbuildpath.exists():
+            shutil.rmtree(tmpbuildpath)
+
+    def _build_to_tmpdir(self, base_target):
+        _hash = self._hash + hash(base_target)
+        if self._build_hash==_hash:
+            return
+
+        self._remove_tmpbuilddir()
+
+        with set_directory(self._tmppath):
+            kwargs = self._build_kwargs
+
+            # We need to be really careful when we convert. See
+            # https://github.com/holoviz/panel/issues/3939
+            with Timer("convert project"):
+                process = ctx_forkserver.Process(
+                    target=_convert_project,
+                    kwargs=kwargs,
+                )
+                process.start()
+
+                with set_directory(Path("build")):
+                    self.save_build_json(kwargs)
+                process.join()
+                if base_target != "":
+                    app_html = Path("build/app.html")
+                    text = app_html.read_text(encoding="utf8")
+                    text = text.replace("<head>", "<head><base target='_blank' />")
+                    app_html.write_text(text, encoding="utf8")
+
+        self._build_hash = _hash
+
+    def _copy_from_tmpdir(self):
+        dst = str(Path().absolute())
+        shutil.copytree(self._tmppath, dst, dirs_exist_ok=True)
 
     def build(self, base_target=""):
         """Saves and builds (i.e. converts) to the current working directory"""
-        kwargs = self._build_kwargs
+        self._save_to_tmpdir()
+        self._build_to_tmpdir(base_target=base_target)
+        self._copy_from_tmpdir()
 
-        # We need to be really careful when we convert. See
-        # https://github.com/holoviz/panel/issues/3939
-        with Timer("convert project"):
-            process = ctx_forkserver.Process(
-                target=_convert_project,
-                kwargs=kwargs,
-            )
-            process.start()
 
-            self.save_build_json(kwargs)
-            process.join()
-        if base_target != "":
-            app_html = pathlib.Path("build/app.html")
-            text = app_html.read_text(encoding="utf8")
-            text = text.replace("<head>", "<head><base target='_blank' />")
-            app_html.write_text(text, encoding="utf8")
 
     def to_dict(self):
         """Returns the project as a dictionary"""
@@ -242,6 +299,24 @@ class Project(param.Parameterized):
                     file.write(zip_folder.getbuffer())
                     shutil.unpack_archive(target_file, format="zip")
                     return Project.read()
+
+    def copy(self, project: Project):
+        """Copies the given project including any saved and build files"""
+        self.source.code = project.source.code
+        self.source.readme = project.source.readme
+        self.source.requirements = project.source.requirements
+        self.source.thumbnail = project.source.thumbnail
+        self._save_hash=""
+        self._build_hash=""
+        self._reset_tmpdir()
+
+        # pylint: disable=protected-access
+        with set_directory(self._tmppath):
+            project._copy_from_tmpdir()
+        self._save_hash=project._save_hash
+        self._build_hash=project._build_hash
+
+
 
 
 class User(param.Parameterized):
@@ -585,9 +660,7 @@ class AppState(param.Parameterized):
 
     def copy(self, project: Project):
         """Copies the project from the source path"""
-        self.project.source.code = project.source.code
-        self.project.source.readme = project.source.readme
-        self.project.source.requirements = project.source.requirements
+        self.project.copy(project)
 
         key = self._get_random_key()
         self.site.development_storage.copy(key=key, project=self.project)
