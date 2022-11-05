@@ -92,6 +92,9 @@ def test_set_and_get(key: str, azure_blob_storage: AzureBlobStorage, project: Pr
     new_project = azure_blob_storage[key]
     assert project == new_project
 
+    keys = azure_blob_storage.get_keys()
+    assert keys == [key]
+
     azure_blob_storage.delete(key)
 
     for file in Project.files:

@@ -33,7 +33,11 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
         super().__init__()
 
         layout = pn.Column(
-            pn.pane.Markdown("## 🎁 Examples\nClick a button below to select an example", margin=0),
+            pn.pane.Markdown(
+                "## 🎁 Examples\nClick a button below to select an example or check out the "
+                "<fast-anchor href='sharing_gallery' appearance='hypertext'>Gallery</fast-anchor>.",
+                margin=0,
+            ),
             sizing_mode="stretch_width",
         )
 
@@ -68,5 +72,5 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
 
 if __name__.startswith("bokeh"):
     pn.extension(template="fast")
-    gallery = Gallery.read(Path("examples/projects/awesome-panel"))
+    gallery = Gallery.read(Path(__file__).parent.parent / "examples")
     pn.Column(gallery.param.value, gallery).servable(target="sidebar")

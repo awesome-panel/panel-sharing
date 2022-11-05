@@ -2,6 +2,7 @@
 import os
 
 SITE = "Awesome Panel"
+SITE_URL = "https://awesome-panel.org/sharing"
 TITLE = "Panel Sharing Prototype"
 
 FAQ = """
@@ -95,7 +96,8 @@ USER_NAME_REGEX = "^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$"
 PROJECT_NAME = "new"
 REPOSITORY_NAME = "new"
 AZURE_BLOB_URL = "https://awesomepanelsharing.blob.core.windows.net/"
-AZURE_WEB_URL = "https://sharing.awesome-panel.org/"
+# "https://sharing.awesome-panel.org/"
+AZURE_WEB_URL = "https://awesomepanelsharing.z16.web.core.windows.net/"
 AZURE_PROJECT_CONTAINER_NAME = "project"
 AZURE_WEB_CONTAINER_NAME = "$web"
 AZURE_BLOB_CONN_STR = os.getenv("AZURE_BLOB_CONN_STR", "")

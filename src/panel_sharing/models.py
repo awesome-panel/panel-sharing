@@ -11,11 +11,12 @@ import tempfile
 import uuid
 from io import BytesIO
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 import param
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobServiceClient, ContentSettings
+from azure.storage.blob._list_blobs_helper import BlobPrefix
 from panel import __version__
 from panel.io.convert import convert_app
 
@@ -568,6 +569,18 @@ class AzureBlobStorage(Storage):
         if container_name == "$web":
             return self.web_url + key + "/" + str(file_path)
         return self.blob_url + container_name + "/" + key + "/" + str(file_path)
+
+
+    def get_keys(self) -> List[str]:
+        """Returns the app keys from the blob storage"""
+        keys = []
+        for user in self.web_container_client.walk_blobs('', delimiter='/'):
+            if isinstance(user, BlobPrefix):
+                for app in user:
+                    if isinstance(app, BlobPrefix):
+                        keys.append(app.name[:-1])
+        return keys
+
 
 class Site(param.Parameterized):
     """A site like awesome-panel.org. But could also be another site"""
