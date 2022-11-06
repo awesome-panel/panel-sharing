@@ -37,6 +37,7 @@ dependencies = [
     "bokeh<3.0",
     "panel<1.0",
     "azure-storage-blob",
+    "diskcache",
 ]
 dynamic = ["version"]
 
@@ -97,6 +98,7 @@ module = [
     "hvplot.*",
     "param.*",
     "pyviz_comms.*",
+    "diskcache.*",
 ]
 ignore_missing_imports = true
 

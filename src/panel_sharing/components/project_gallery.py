@@ -101,7 +101,8 @@ def _get_card(key: str) -> str:
     app_description = f"by {app_author}"
     app_author_url = f"https://github.com/{app_author}"
     app_code = f"sharing?app={key}"
-    app_author_avatar = "https://upload.wikimedia.org/wikipedia/commons/5/59/User-avatar.svg"
+    app_author_avatar = f"https://github.com/{app_author}.png?size=40"
+
     image_url = random.choice(image_urls)
 
     return f"""

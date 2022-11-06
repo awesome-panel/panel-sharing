@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 import panel as pn
+from diskcache import Cache
 
 from panel_sharing import components
 from panel_sharing.models import AppState, AzureBlobStorage, Project, Site
@@ -28,8 +29,8 @@ RAW_CSS = """
 }
 """
 
-if not "panel-sharing" in pn.state.cache:
-    pn.state.cache["panel-sharing"] = {"state": {}}
+
+cache = Cache(".cache/panel_sharing")
 
 
 @pn.cache
@@ -120,18 +121,15 @@ def create():
         logger.info("handle_auth_state")
         if not state:
             return
-        cache = pn.state.cache["panel-sharing"]["state"]
-        if not state in cache:
-            cache[state] = {
-                "source": app_state.project.source.to_dict(),
-                "key": app_state.development_key,
-            }
-        else:
-            app_state.project.source.param.update(**cache[state]["source"])
-            app_state._set_development(cache[state]["key"])  # pylint: disable=protected-access
+        cache[state] = {
+            "source": app_state.project.source.to_dict(),
+            "key": app_state.development_key,
+        }
 
-    login_state = pn.state.session_args.get("state", [b""])[0].decode("utf8")
-    handle_auth_state(login_state)
+    oauth_state = authentication.get_state_from_session_args()
+    if oauth_state and oauth_state in cache:
+        state.project.source.param.update(**cache[oauth_state]["source"])
+        state._set_development(cache[oauth_state]["key"])  # pylint: disable=protected-access
 
     template = pn.template.FastGridTemplate(
         site=state.site.name,

@@ -139,7 +139,7 @@ class Timer(ContextDecorator):
         self.stop()
 
 
-def del_query_params(*args):
+def del_query_params(*args, period=None):
     """Deletes the query arguments"""
     if not args:
         args = ("code", "state", "example", "project", "app")
@@ -148,4 +148,11 @@ def del_query_params(*args):
         for parameter in args:
             if parameter in query:
                 del query[parameter]
-        pn.state.location.search = "?" + urlparse.urlencode(query)
+
+        def later():
+            pn.state.location.search = "?" + urlparse.urlencode(query)
+
+        if not period:
+            later()
+        else:
+            pn.state.add_periodic_callback(later, period=period, count=1)
