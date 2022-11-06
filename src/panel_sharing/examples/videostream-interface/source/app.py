@@ -395,10 +395,10 @@ component = VideoStreamInterface(
 )
 
 pn.template.FastListTemplate(
-    site="Awesome Panel",
+    site="Awesome Panel Sharing",
+    site_url="https://awesome-panel.org/sharing",
+    favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",
     title="VideoStream with transforms",
     sidebar=[component.settings],
     main=[component],
-    site_url="https://awesome-panel.org",
-    favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",
 ).servable()

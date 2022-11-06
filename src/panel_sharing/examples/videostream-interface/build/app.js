@@ -15,14 +15,27 @@ async function startApplication() {
   self.pyodide.globals.set("sendPatch", sendPatch);
   console.log("Loaded!");
   await self.pyodide.loadPackage("micropip");
-  const env_spec = ['https://cdn.holoviz.org/panel/0.14.0/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.0/dist/wheels/panel-0.14.0-py3-none-any.whl', 'numpy', 'scikit-image']
+  const env_spec = ['https://cdn.holoviz.org/panel/0.14.1/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.1/dist/wheels/panel-0.14.1-py3-none-any.whl', 'pyodide-http==0.1.0', 'numpy', 'scikit-image']
   for (const pkg of env_spec) {
-    const pkg_name = pkg.split('/').slice(-1)[0].split('-')[0]
+    let pkg_name;
+    if (pkg.endsWith('.whl')) {
+      pkg_name = pkg.split('/').slice(-1)[0].split('-')[0]
+    } else {
+      pkg_name = pkg
+    }
     self.postMessage({type: 'status', msg: `Installing ${pkg_name}`})
-    await self.pyodide.runPythonAsync(`
-      import micropip
-      await micropip.install('${pkg}');
-    `);
+    try {
+      await self.pyodide.runPythonAsync(`
+        import micropip
+        await micropip.install('${pkg}');
+      `);
+    } catch(e) {
+      console.log(e)
+      self.postMessage({
+	type: 'status',
+	msg: `Error while installing ${pkg_name}`
+      });
+    }
   }
   console.log("Packages loaded!");
   self.postMessage({type: 'status', msg: 'Executing code'})
@@ -140,7 +153,6 @@ class ImageTransform(pn.viewable.Viewer):
         self.view = self.create_view()
 
     def __panel__(self):
-        print("__panel__", self.name)
         return self.view
 
     def run(self, image: str, height: int = HEIGHT, width: int = WIDTH) -> str:
@@ -432,24 +444,35 @@ component = VideoStreamInterface(
 )
 
 pn.template.FastListTemplate(
-    site="Awesome Panel",
+    site="Awesome Panel Sharing",
+    site_url="https://awesome-panel.org/sharing",
+    favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",
     title="VideoStream with transforms",
     sidebar=[component.settings],
     main=[component],
-    site_url="https://awesome-panel.org",
-    favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",
 ).servable()
 
 
 await write_doc()
   `
-  const [docs_json, render_items, root_ids] = await self.pyodide.runPythonAsync(code)
-  self.postMessage({
-    type: 'render',
-    docs_json: docs_json,
-    render_items: render_items,
-    root_ids: root_ids
-  });
+
+  try {
+    const [docs_json, render_items, root_ids] = await self.pyodide.runPythonAsync(code)
+    self.postMessage({
+      type: 'render',
+      docs_json: docs_json,
+      render_items: render_items,
+      root_ids: root_ids
+    })
+  } catch(e) {
+    const traceback = `${e}`
+    const tblines = traceback.split('\n')
+    self.postMessage({
+      type: 'status',
+      msg: tblines[tblines.length-2]
+    });
+    throw e
+  }
 }
 
 self.onmessage = async (event) => {

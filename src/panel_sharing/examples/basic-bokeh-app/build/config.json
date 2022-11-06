@@ -1,9 +1,9 @@
 {
  "app_builder": {
-  "panel sharing": "0.3.0"
+  "panel sharing": "0.19.0"
  },
  "app_framework": {
-  "panel": "0.14.0"
+  "panel": "0.14.1"
  },
  "build_kwargs": {
   "app": "source/app.py",

@@ -251,7 +251,11 @@ class Project(param.Parameterized):
         self._build_to_tmpdir(base_target=base_target)
         self._copy_from_tmpdir()
 
-
+    def rebuild(self, base_target=""):
+        """Forces as rebuild"""
+        self._save_hash=""
+        self._build_hash=""
+        self.build(base_target=base_target)
 
     def to_dict(self):
         """Returns the project as a dictionary"""

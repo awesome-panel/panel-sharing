@@ -11,7 +11,7 @@ import param
 import requests
 from tornado.web import create_signed_value, decode_signed_value
 
-from panel_sharing.utils import del_query_params
+# from panel_sharing.utils import del_query_params
 
 logger = logging.getLogger("oauth")
 logger.setLevel(logging.INFO)
@@ -194,6 +194,7 @@ class OAuth(pn.viewable.Viewer):
 
     @pn.depends("log_out", watch=True)
     def _log_out_handler(self):
+        user = self.user
         self._delete_secure_cookie("user_info")
         self._delete_secure_cookie("access_token")
         with param.edit_constant(self):
@@ -201,7 +202,7 @@ class OAuth(pn.viewable.Viewer):
             self.user = ""
             self.access_token = ""
             self.param.trigger("user")
-        logger.info("Logged out user")
+        logger.info("Logged out %s", user)
 
     def _set_user_from_redirect(self):
         code = pn.state.session_args.get("code", [b""])[0].decode("utf8")
@@ -218,14 +219,14 @@ class OAuth(pn.viewable.Viewer):
         else:
             logger.info("State or code not valid")
 
-        with param.edit_constant(self):
-            self.state = ""
+        # with param.edit_constant(self):
+        #     self.state = ""
 
-        def on_load():
-            self._delete_secure_cookie("state")
-            del_query_params("state", "code")
+        # def on_load():
+        #     self._delete_secure_cookie("state")
+        #     del_query_params("state", "code")
 
-        pn.state.onload(on_load)
+        # pn.state.onload(on_load)
 
     def _set_user_from_access_token(self, access_token):
         response = requests.get(
@@ -248,7 +249,7 @@ class OAuth(pn.viewable.Viewer):
                     self._set_secure_cookie(name="user_info", value=json.dumps(self.user_info))
 
                 pn.state.onload(on_load)
-            logger.info("%s logged in successfully", self.user_info["html_url"])
+            logger.info("Logged in %s successfully", self.user)
         else:
             logger.info("No login in response_json")
 
