@@ -270,7 +270,6 @@ class OAuth(pn.viewable.Viewer):
         ).json()
         if "login" in response_json:
             return response_json
-        print(response_json)
         return {}
 
     def _request_access_token(self, code: str):
