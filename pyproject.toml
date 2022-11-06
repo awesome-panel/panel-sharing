@@ -36,6 +36,7 @@ classifiers = [
 dependencies = [
     "bokeh<3.0",
     "panel<1.0",
+    "azure-storage-blob",
 ]
 dynamic = ["version"]
 

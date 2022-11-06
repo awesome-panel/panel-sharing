@@ -6,22 +6,17 @@ from typing import List
 import panel as pn
 
 from panel_sharing.models import Gallery as GalleryModel
-from panel_sharing.models import Project, Source
+from panel_sharing.models import Project
+from panel_sharing.utils import set_directory
 
 
 def _read_projects(path: Path):
     examples = []
     for folder in path.iterdir():
         if folder.is_dir():
-            project = Project(
-                name=string.capwords(folder.name.replace("-", " ")),
-                source=Source(
-                    name=folder.name,
-                    code=(folder / "source/app.py").read_text(),
-                    readme=(folder / "source/readme.md").read_text(),
-                    requirements=(folder / "source/requirements.txt").read_text(),
-                ),
-            )
+            with set_directory(folder):
+                project = Project.read()
+            project.name = string.capwords(folder.name.replace("-", " "))
             examples.append(project)
     return sorted(examples, key=lambda x: x.name)
 
@@ -33,7 +28,11 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
         super().__init__()
 
         layout = pn.Column(
-            pn.pane.Markdown("## 🎁 Examples"),
+            pn.pane.Markdown(
+                "## 🎁 Examples\nClick a button below to select an example or check out the "
+                "<fast-anchor href='sharing_gallery' appearance='hypertext'>Gallery</fast-anchor>.",
+                margin=0,
+            ),
             sizing_mode="stretch_width",
         )
 
@@ -42,7 +41,7 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
         self.value = self._examples_map.get("Welcome", examples[0])
 
         for example in examples:
-            button = pn.widgets.Button(name=example.name, button_type="success")
+            button = pn.widgets.Button(name=example.name, button_type="light")
 
             button.on_click(self._click_handler)
             layout.append(button)
@@ -68,5 +67,5 @@ class Gallery(GalleryModel, pn.viewable.Viewer):
 
 if __name__.startswith("bokeh"):
     pn.extension(template="fast")
-    gallery = Gallery.read(Path("examples/projects/awesome-panel"))
+    gallery = Gallery.read(Path(__file__).parent.parent / "examples")
     pn.Column(gallery.param.value, gallery).servable(target="sidebar")

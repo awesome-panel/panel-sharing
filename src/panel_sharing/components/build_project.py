@@ -3,6 +3,7 @@ import panel as pn
 import param
 
 from panel_sharing.components.js_actions import JSActions
+from panel_sharing.utils import del_query_params
 
 
 class ProjectBuilder(pn.viewable.Viewer):
@@ -32,25 +33,27 @@ class ProjectBuilder(pn.viewable.Viewer):
         if pn.state.notifications:
             pn.state.notifications.success("Build succeeded")
 
+        del_query_params()
+        pn.state.location.update_query(project=self._state.project.to_base64())
+
     @pn.depends("open_developer_link", watch=True)
     def _open_developer_link(self):
         self.jsactions.open(url=self._state.development_url)
 
     def _download_callback(self):
-        key = self._state.development_key
-        return self._state.site.development_storage.get_zipped_folder(key=key)
+        return self._state.project.to_zipped_folder()
 
     def _get_panel(self):
         self.convert_button = pn.widgets.Button.from_param(
             self.param.convert,
-            name="🏃 Convert",
+            name="Convert",
             sizing_mode="stretch_width",
             align="end",
             button_type="primary",
         )
         self.open_developer_link_button = pn.widgets.Button.from_param(
             self.param.open_developer_link,
-            name="🔗 OPEN",
+            name="🔗 Open",
             width=125,
             sizing_mode="fixed",
             align="end",
@@ -62,7 +65,7 @@ class ProjectBuilder(pn.viewable.Viewer):
             width=125,
             button_type="light",
             sizing_mode="fixed",
-            label="📁 DOWNLOAD",
+            label="📁 Download",
             align="end",
         )
 

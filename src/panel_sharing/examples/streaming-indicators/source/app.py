@@ -4,7 +4,7 @@ import panel as pn
 pn.extension(sizing_mode="stretch_width")
 
 INDICATORS = 32
-PERIOD = 500  # mili seconds
+PERIOD = 200  # mili seconds
 
 indicators = (
     pn.indicators.Trend(

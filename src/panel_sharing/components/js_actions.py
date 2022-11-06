@@ -14,8 +14,21 @@ class JSActions(pn.reactive.ReactiveHTML):  # pylint: disable=too-many-ancestors
     _template = """<div id="jsaction" style="height:0px;width:0px"></div>"""
     _scripts = {
         # pylint: disable=line-too-long
-        "_open": "url=window.location.href.substring(0, location.href.lastIndexOf('/')+1) +  data._url;window.open(url, '_blank')",
-        "_copy": "url=window.location.href.substring(0, location.href.lastIndexOf('/')+1) +  data._url;navigator.clipboard.writeText(url)",
+        "_open": """
+if (data._url.startsWith("http")){
+    url=data._url
+} else {
+    url=window.location.href.substring(0, location.href.lastIndexOf('/')+1) +  data._url;
+}
+window.open(url, '_blank')""",
+        "_copy": """
+if (data._url.startsWith("http")){
+    url=data._url
+} else {
+    url=window.location.href.substring(0, location.href.lastIndexOf('/')+1) +  data._url;
+}
+navigator.clipboard.writeText(url)
+""",
         # pylint: enable=line-too-long
     }
 

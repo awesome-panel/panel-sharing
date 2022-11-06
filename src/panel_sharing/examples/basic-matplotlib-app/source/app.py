@@ -22,6 +22,6 @@ plot_output = pn.bind(plot_output, bins=bins_input)
 
 pn.Column(
     bins_input,
-    pn.panel(plot_output, height=400, sizing_mode="scale_height", align="center"),
+    pn.panel(plot_output, height=400, sizing_mode="stretch_both", align="center"),
     sizing_mode="stretch_both",
 ).servable()
