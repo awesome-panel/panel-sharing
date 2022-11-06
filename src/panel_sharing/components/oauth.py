@@ -29,8 +29,9 @@ class JSActions(pn.reactive.ReactiveHTML):  # pylint: disable=too-many-ancestors
 
     _template = """<div id="jsaction" style="height:0px;width:0px"></div>"""
     _scripts = {
-        "_open": "window.open(data._url, '_self')",
+        "_open": "console.log(data._url);window.open(data._url, '_self')",
         "_set_cookie": """
+console.log("set cookie")
 function createCookie(name,value,days) {
     if (days) {
         var date = new Date();
@@ -41,10 +42,14 @@ function createCookie(name,value,days) {
     document.cookie = name+"="+value+expires+"; path=/;secure";
 }      
 const {name, value, days}=data._set_cookie
-createCookie(name, value, days)""",
+createCookie(name, value, days)
+console.log("cookie set")""",
         "_delete_secure_cookie": """
+console.log("delete cookie")
 value=data._delete_secure_cookie+'=; Max-Age=-99999999; path=/;secure'
-document.cookie = value""",
+document.cookie = value
+console.log("cookie deleted")
+""",
     }
 
     def __init__(self):
@@ -52,6 +57,7 @@ document.cookie = value""",
 
     def open(self, url: str):
         """Opens the url in a new tab"""
+        logger.info("open %s", url)
         if url:
             self._url = url
             self._open = not self._open
@@ -66,6 +72,7 @@ document.cookie = value""",
             value: The value of the cookie. Please not you will have to encrypt this your self
             days: Days to expiration. Defaults to 1.0.
         """
+        logger.info("set_secure_cookie %s %s", name, value)
         self._set_cookie = {"name": name, "value": value, "days": days}
 
     def delete_secure_cookie(self, name):
@@ -74,6 +81,7 @@ document.cookie = value""",
         Args:
             name: The name of the cookie to delete
         """
+        logger.info("delete_secure_cookie %s", name)
         self._delete_secure_cookie = name
 
 
@@ -172,7 +180,10 @@ class OAuth(pn.viewable.Viewer):
         self._jsactions.delete_secure_cookie(name)
 
     def _is_valid(self, state: str) -> bool:
-        return bool(self._get_secure_cookie("state") == state and state)
+        cookie_state = self._get_secure_cookie("state")
+        logger.info("expected state %s", state)
+        logger.info("cookie   state %s", cookie_state)
+        return bool(state and cookie_state == state)
 
     def _create_state(self):
         with param.edit_constant(self):
@@ -270,6 +281,9 @@ class OAuth(pn.viewable.Viewer):
                 code=code,
             ),
         )
+        print("url", "https://github.com/login/oauth/access_token")
+        print(str(response.text))
+        print(str(response.json()))
         if not "access_token" in response.json():
             logger.info("No access_token in response.json()")
             return ""

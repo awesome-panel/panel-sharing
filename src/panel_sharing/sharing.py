@@ -1,6 +1,7 @@
 """Create the Awesome Panel Sharing App"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import panel as pn
@@ -14,6 +15,9 @@ from panel_sharing.utils import (
     get_project_key,
     notify_app_key_not_found,
 )
+
+logger = logging.getLogger("panel_sharing")
+logger.setLevel(logging.INFO)
 
 RAW_CSS = """
 .sidenav a {
@@ -74,6 +78,7 @@ def create():
         examples: A path to a gallery of example projects. Defaults to EXAMPLES.
 
     """
+    logger.info("CREATE STARTED")
     pn.config.raw_css.append(RAW_CSS)
     pn.extension(
         "ace", sizing_mode="stretch_width", notifications=True, exception_handler=exception_handler
@@ -89,6 +94,7 @@ def create():
         project.build()
         state.copy(project)
         if pn.state.location:
+            logger.info("set_example: updating location")
             pn.state.location.search = ""
             pn.state.location.update_query(example=project.name)
 
@@ -106,10 +112,12 @@ def create():
     authentication = components.OAuth()
 
     pn.bind(state.user.authenticate, name=authentication.param.user, watch=True)
+    logger.info("authenticating user")
     state.user.authenticate(authentication.user)
 
     @pn.depends(authentication.param.state, watch=True)
     def handle_auth_state(state, app_state=state):
+        logger.info("handle_auth_state")
         if not state:
             return
         cache = pn.state.cache["panel-sharing"]["state"]
@@ -142,6 +150,7 @@ def create():
     )
     template.main[0:5, 0:6] = source_pane
     template.main[0:5, 6:12] = target_pane
+    logger.info("CREATE FINISHED")
     return template
 
 
