@@ -34,9 +34,8 @@ class JSActions(pn.reactive.ReactiveHTML):  # pylint: disable=too-many-ancestors
 
     _template = """<div id="jsaction" style="height:0px;width:0px"></div>"""
     _scripts = {
-        "_open": "console.log(data._url);window.open(data._url, '_self')",
+        "_open": "window.open(data._url, '_self')",
         "_set_cookie": """
-console.log("set cookie")
 function createCookie(name,value,days) {
     if (days) {
         var date = new Date();
@@ -47,13 +46,10 @@ function createCookie(name,value,days) {
     document.cookie = name+"="+value+expires+"; path=/;secure";
 }      
 const {name, value, days}=data._set_cookie
-createCookie(name, value, days)
-console.log("cookie set")""",
+createCookie(name, value, days)""",
         "_delete_secure_cookie": """
-console.log("delete cookie")
 value=data._delete_secure_cookie+'=; Max-Age=-99999999; path=/;secure'
 document.cookie = value
-console.log("cookie deleted")
 """,
     }
 
