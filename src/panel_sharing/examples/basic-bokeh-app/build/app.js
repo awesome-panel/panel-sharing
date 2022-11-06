@@ -15,14 +15,27 @@ async function startApplication() {
   self.pyodide.globals.set("sendPatch", sendPatch);
   console.log("Loaded!");
   await self.pyodide.loadPackage("micropip");
-  const env_spec = ['https://cdn.holoviz.org/panel/0.14.0/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.0/dist/wheels/panel-0.14.0-py3-none-any.whl', 'numpy']
+  const env_spec = ['https://cdn.holoviz.org/panel/0.14.1/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.1/dist/wheels/panel-0.14.1-py3-none-any.whl', 'pyodide-http==0.1.0', 'numpy']
   for (const pkg of env_spec) {
-    const pkg_name = pkg.split('/').slice(-1)[0].split('-')[0]
+    let pkg_name;
+    if (pkg.endsWith('.whl')) {
+      pkg_name = pkg.split('/').slice(-1)[0].split('-')[0]
+    } else {
+      pkg_name = pkg
+    }
     self.postMessage({type: 'status', msg: `Installing ${pkg_name}`})
-    await self.pyodide.runPythonAsync(`
-      import micropip
-      await micropip.install('${pkg}');
-    `);
+    try {
+      await self.pyodide.runPythonAsync(`
+        import micropip
+        await micropip.install('${pkg}');
+      `);
+    } catch(e) {
+      console.log(e)
+      self.postMessage({
+	type: 'status',
+	msg: `Error while installing ${pkg_name}`
+      });
+    }
   }
   console.log("Packages loaded!");
   self.postMessage({type: 'status', msg: 'Executing code'})
@@ -35,33 +48,35 @@ from panel.io.pyodide import init_doc, write_doc
 init_doc()
 
 import numpy as np
-
-from bokeh.io import curdoc
 from bokeh.layouts import row
-from bokeh.models import ColumnDataSource, Column
-from bokeh.models.widgets import Slider, TextInput
+from bokeh.models import Column, ColumnDataSource
+from bokeh.models.widgets import Slider
 from bokeh.plotting import figure
 
 # Set up data
 N = 200
-x = np.linspace(0, 4*np.pi, N)
+x = np.linspace(0, 4 * np.pi, N)
 y = np.sin(x)
 source = ColumnDataSource(data=dict(x=x, y=y))
 
 
 # Set up plot
-plot = figure(plot_height=400, title="my sine wave",
-              tools="crosshair,pan,reset,save,wheel_zoom",
-              x_range=[0, 4*np.pi], y_range=[-2.5, 2.5])
+plot = figure(
+    plot_height=400,
+    title="my sine wave",
+    tools="crosshair,pan,reset,save,wheel_zoom",
+    x_range=[0, 4 * np.pi],
+    y_range=[-2.5, 2.5],
+)
 
-plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6)
+plot.line("x", "y", source=source, line_width=3, line_alpha=0.6)
 plot.title.text = "My sine wave"
 
 
 # Set up widgets
 offset = Slider(title="offset", value=0.0, start=-5.0, end=5.0, step=0.1)
 amplitude = Slider(title="amplitude", value=1.0, start=-5.0, end=5.0)
-phase = Slider(title="phase", value=0.0, start=0.0, end=2*np.pi)
+phase = Slider(title="phase", value=0.0, start=0.0, end=2 * np.pi)
 freq = Slider(title="frequency", value=1.0, start=0.1, end=5.1)
 
 
@@ -75,13 +90,14 @@ def update_data(attrname, old, new):
     k = freq.value
 
     # Generate the new curve
-    x = np.linspace(0, 4*np.pi, N)
-    y = a*np.sin(k*x + w) + b
+    x = np.linspace(0, 4 * np.pi, N)
+    y = a * np.sin(k * x + w) + b
 
     source.data = dict(x=x, y=y)
 
+
 for w in [offset, amplitude, phase, freq]:
-    w.on_change('value', update_data)
+    w.on_change("value", update_data)
 
 
 # Set up layouts and add to document
@@ -92,25 +108,37 @@ bokeh_component = row(inputs, plot, sizing_mode="stretch_width")
 # Set up Panel
 
 import panel as pn
+
 pn.extension(template="fast")
 pn.panel(bokeh_component).servable()
 
 pn.state.template.param.update(
-    site="Awesome Bokeh",
-    site_url="https://awesome-panel.org",
+    site="Awesome Panel Sharing",
+    site_url="https://awesome-panel.org/sharing",
     favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",
     title="Bokeh App",
 )
 
 await write_doc()
   `
-  const [docs_json, render_items, root_ids] = await self.pyodide.runPythonAsync(code)
-  self.postMessage({
-    type: 'render',
-    docs_json: docs_json,
-    render_items: render_items,
-    root_ids: root_ids
-  });
+
+  try {
+    const [docs_json, render_items, root_ids] = await self.pyodide.runPythonAsync(code)
+    self.postMessage({
+      type: 'render',
+      docs_json: docs_json,
+      render_items: render_items,
+      root_ids: root_ids
+    })
+  } catch(e) {
+    const traceback = `${e}`
+    const tblines = traceback.split('\n')
+    self.postMessage({
+      type: 'status',
+      msg: tblines[tblines.length-2]
+    });
+    throw e
+  }
 }
 
 self.onmessage = async (event) => {
