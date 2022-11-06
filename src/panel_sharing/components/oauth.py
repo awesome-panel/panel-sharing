@@ -13,7 +13,8 @@ from tornado.web import create_signed_value, decode_signed_value
 
 from panel_sharing.utils import del_query_params
 
-logger = logging.getLogger()
+logger = logging.getLogger("oauth")
+logger.setLevel(logging.INFO)
 
 
 class JSActions(pn.reactive.ReactiveHTML):  # pylint: disable=too-many-ancestors
@@ -152,7 +153,9 @@ class OAuth(pn.viewable.Viewer):
                 with param.edit_constant(self):
                     self.user_info = json.loads(user_info)
                     self.user = self.user_info["login"]
-                    print("login")
+                    logger.info("Logged in %s from user_info cookie", self.user)
+        else:
+            logger.info("No user_info cookie, i.e. no user to log in.")
 
     def _set_secure_cookie(self, name, value, days=10):
         signed_value = create_signed_value(self._cookie_secret, name, value).decode("utf8")
@@ -187,6 +190,7 @@ class OAuth(pn.viewable.Viewer):
             f"&allow_signup=true"
         )
         self._jsactions.open(url)
+        logger.info("Redirecting to https://github.com/login/oauth/authorize")
 
     @pn.depends("log_out", watch=True)
     def _log_out_handler(self):
@@ -197,15 +201,23 @@ class OAuth(pn.viewable.Viewer):
             self.user = ""
             self.access_token = ""
             self.param.trigger("user")
+        logger.info("Logged out user")
 
     def _set_user_from_redirect(self):
         code = pn.state.session_args.get("code", [b""])[0].decode("utf8")
+        logger.info("Code found in session_args")
         with param.edit_constant(self):
             self.state = pn.state.session_args.get("state", [b""])[0].decode("utf8")
+        logger.info("State %s found", self.state)
         if self._is_valid(state=self.state) and code:
             access_token = self._get_access_token(code)
             if access_token:
                 self._set_user_from_access_token(access_token)
+            else:
+                logger.info("No access_token found")
+        else:
+            logger.info("State or code not valid")
+
         with param.edit_constant(self):
             self.state = ""
 
@@ -236,7 +248,9 @@ class OAuth(pn.viewable.Viewer):
                     self._set_secure_cookie(name="user_info", value=json.dumps(self.user_info))
 
                 pn.state.onload(on_load)
-            print(f"{self.user_info['html_url']} logged in successfully")
+            logger.info("%s logged in successfully", self.user_info["html_url"])
+        else:
+            logger.info("No login in response_json")
 
     def _get_access_token(self, code: str):
         if not code:
@@ -256,6 +270,7 @@ class OAuth(pn.viewable.Viewer):
             ),
         )
         if not "access_token" in response.json():
+            logger.info("No access_token in response.json()")
             return ""
         return response.json()["access_token"]
 
