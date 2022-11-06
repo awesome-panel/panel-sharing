@@ -138,6 +138,10 @@ class Project(param.Parameterized):
         project = Project(name="new")
         with set_directory(Path("source")):
             project.source = Source.read()
+        shutil.copytree(Path(), Path(project._tmpdir.name), dirs_exist_ok=True)
+        project._save_hash=project._hash
+        if Path("build").exists():
+            project._build_hash=project._hash
         return project
 
     @property
@@ -214,7 +218,6 @@ class Project(param.Parameterized):
             return
 
         self._remove_tmpbuilddir()
-
         with set_directory(self._tmppath):
             kwargs = self._build_kwargs
 

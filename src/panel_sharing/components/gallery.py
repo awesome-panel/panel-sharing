@@ -6,22 +6,17 @@ from typing import List
 import panel as pn
 
 from panel_sharing.models import Gallery as GalleryModel
-from panel_sharing.models import Project, Source
+from panel_sharing.models import Project
+from panel_sharing.utils import set_directory
 
 
 def _read_projects(path: Path):
     examples = []
     for folder in path.iterdir():
         if folder.is_dir():
-            project = Project(
-                name=string.capwords(folder.name.replace("-", " ")),
-                source=Source(
-                    name=folder.name,
-                    code=(folder / "source/app.py").read_text(),
-                    readme=(folder / "source/readme.md").read_text(),
-                    requirements=(folder / "source/requirements.txt").read_text(),
-                ),
-            )
+            with set_directory(folder):
+                project = Project.read()
+            project.name = string.capwords(folder.name.replace("-", " "))
             examples.append(project)
     return sorted(examples, key=lambda x: x.name)
 

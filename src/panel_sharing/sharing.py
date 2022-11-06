@@ -88,8 +88,9 @@ def create():
     def set_example(project):
         project.build()
         state.copy(project)
-        pn.state.location.search = ""
-        pn.state.location.update_query(example=project.name)
+        if pn.state.location:
+            pn.state.location.search = ""
+            pn.state.location.update_query(example=project.name)
 
     _set_start_project(state, set_example, gallery)
 
@@ -142,3 +143,14 @@ def create():
     template.main[0:5, 0:6] = source_pane
     template.main[0:5, 6:12] = target_pane
     return template
+
+
+if __name__ == "__main__":
+    from panel_sharing.utils import Timer
+
+    with Timer(name="First"):
+        create()
+    with Timer(name="Second"):
+        create()
+    with Timer(name="Third"):
+        create()

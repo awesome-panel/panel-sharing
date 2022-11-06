@@ -94,12 +94,14 @@ class Timer(ContextDecorator):
 
     timers: ClassVar[Dict[str, float]] = {}
     name: Optional[str] = None
-    text: str = "Elapsed time: {:0.4f} seconds"
+    text: str = "{}: Elapsed time: {:0.4f} seconds"
     logger: Optional[Callable[[str], None]] = print
     _start_time: Optional[float] = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         """Initialization: add timer to dict of timers"""
+        if not self.name:
+            self.name = "Timer"
         if self.name:
             self.timers.setdefault(self.name, 0)
 
@@ -121,7 +123,7 @@ class Timer(ContextDecorator):
 
         # Report elapsed time
         if self.logger:
-            self.logger(self.text.format(elapsed_time))
+            self.logger(self.text.format(self.name, elapsed_time))
         if self.name:
             self.timers[self.name] += elapsed_time
 
@@ -141,8 +143,9 @@ def del_query_params(*args):
     """Deletes the query arguments"""
     if not args:
         args = ("code", "state", "example", "project", "app")
-    query = pn.state.location.query_params
-    for parameter in args:
-        if parameter in query:
-            del query[parameter]
-    pn.state.location.search = "?" + urlparse.urlencode(query)
+    if pn.state.location:
+        query = pn.state.location.query_params
+        for parameter in args:
+            if parameter in query:
+                del query[parameter]
+        pn.state.location.search = "?" + urlparse.urlencode(query)
