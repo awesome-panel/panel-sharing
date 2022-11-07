@@ -130,6 +130,7 @@ def _get_card(key: str) -> str:
 
 
 def _get_content(key: str, apps: List[str]):
+    max_apps = False
     content = ""
     filter_apps = []
     for app in sorted(apps):
@@ -138,6 +139,7 @@ def _get_content(key: str, apps: List[str]):
 
     if len(filter_apps) > MAX_CARDS:
         filter_apps = filter_apps[0:MAX_CARDS]
+        max_apps=True
     for app in sorted(filter_apps):
         content += _get_card(app)
 
@@ -150,7 +152,7 @@ def _get_content(key: str, apps: List[str]):
     </div>
     """
 
-    if len(filter_apps) != len(apps):
+    if max_apps:
         # pylint: disable=line-too-long
         content = (
             f"<p style='margin-left:35px'>Too many apps found. Showing the first {len(filter_apps)} of {len(apps)} apps. "
