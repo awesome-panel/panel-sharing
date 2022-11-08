@@ -7,10 +7,10 @@ https://shiny.rstudio.com/py/docs/shinylive.html
 [Panel Sharing](https://awesome-panel.org) makes it very easy to share [Panel](https://panel.holoviz.org) data apps with the world
 
 - Go to [Panel Sharing](https://awesome-panel.org)
-- Add your code
-- Convert the app
-- Login to Github
-- Share
+- Add your code and convert the app
+- Login and share your app
+
+Now you can find the app in the [Panel Sharing Gallery](https://awesome-panel.org/sharing_gallery).
 
 This is made possible by [`panel convert`](https://panel.holoviz.org/user_guide/Running_in_Webassembly.html) that converts Panel apps to [webassembly](https://webassembly.org/). The Webassembly runtime makes it possible to run your apps offline, on all devices and scale to many users for free.
 
@@ -22,10 +22,11 @@ Please be aware that the panel converted apps downloads a large amount of data a
 
 Use the description below if you want to share a small code sample and live app on [Stack Overflow](https://stackoverflow.com/) or [HoloViz Discourse](https://discourse.holoviz.org/).
 
-1. Open the [sharing gallery](https://awesome-panel.org/sharing_gallery).
-2. Add your code to the `app.py` file.
-3. Click the *Convert* button and verify that your app works
-4. Copy-Paste the long url to share it with the world
+Open the [sharing gallery](https://awesome-panel.org/sharing_gallery) and
+
+1. Add your code to the `app.py` file.
+2. Click the *Convert* button and verify that your app works
+3. Copy-Paste the long url to share it with the world
 
 ![Editor Link](assets/images/awesome-panel-sharing-editor-link.jpg)
 
@@ -45,8 +46,13 @@ Open the [sharing gallery](https://awesome-panel.org/sharing_gallery) and
 1. Add your code to the `app.py` editor tab.
 2. Click the *convert* button and verify that your app works
 3. Click the *login* button to log in via Github
-4. Click the *Share* button
-5. Click the *Copy* button to copy the link to your app or click the *Open* button to open your app in a new tab.
+4. Give your app a nice name
+5. Click the *Share* button
+6. Click the *Copy* button to copy the link to your app or click the *Open* button to open your app in a new tab.
+7. Optionally copy the url in the browser if you want a direct link to your app in the editor.
+
+![App Editor Part 1](assets/images/awesome-panel-sharing-editor-sharing1.jpg)
+![App Editor Part 2](assets/images/awesome-panel-sharing-editor-sharing2.jpg)
 
 Optionally you can add your requirements to the `requirements.txt` editor tab. Most often this is not needed though as `panel convert` inspects your code and adds the requirements automatically.
 
@@ -56,9 +62,10 @@ Editor Example URL: [https://awesome-panel.org/sharing?app=MarcSkovMadsen/videos
 
 ### Update and re-share your app
 
-- Open the [sharing gallery](https://awesome-panel.org/sharing_gallery).
-- Search and find your app
-- Click the code icon
+Open the [sharing gallery](https://awesome-panel.org/sharing_gallery) and
+
+1. Search and find your app
+2. Click the code icon
 
 ![Search App and Open Editor with Code](assets/images/awesome-panel-sharing-update-app.jpg)
 
