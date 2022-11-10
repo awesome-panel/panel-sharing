@@ -18,9 +18,9 @@ from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobServiceClient, ContentSettings
 from azure.storage.blob._list_blobs_helper import BlobPrefix
 from panel import __version__
-from panel.io.convert import convert_app
 
 from panel_sharing import VERSION, config
+from panel_sharing.convert import _convert_project
 from panel_sharing.utils import Timer, set_directory
 
 ctx_forkserver = multiprocessing.get_context("forkserver")
@@ -42,13 +42,6 @@ ctx_forkserver.set_forkserver_preload(
 )
 
 EXAMPLES = Path(__file__).parent / "examples"
-
-
-def _convert_project(app: str = "source/app.py", dest_path: str = "build", requirements="auto"):
-    """Helper function"""
-    Path(dest_path).mkdir(parents=True, exist_ok=True)
-    convert_app(app=Path(app), dest_path=Path(dest_path), requirements=requirements)  # type: ignore
-
 
 class Source(param.Parameterized):
     """Represent the source files"""
@@ -117,7 +110,7 @@ class Project(param.Parameterized):
             params["source"] = Source()
         super().__init__(**params)
 
-        self._tmpdir = tempfile.TemporaryDirectory() # pylint: disable=consider-using-with
+        self._tmpdir = tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
         self._tmppath = Path(self._tmpdir.name)
         self._save_hash = ""
         self._build_hash = ""
@@ -139,9 +132,9 @@ class Project(param.Parameterized):
         with set_directory(Path("source")):
             project.source = Source.read()
         shutil.copytree(Path(), Path(project._tmpdir.name), dirs_exist_ok=True)
-        project._save_hash=project._hash
+        project._save_hash = project._hash
         if Path("build").exists():
-            project._build_hash=project._hash
+            project._build_hash = project._hash
         return project
 
     @property
@@ -149,8 +142,8 @@ class Project(param.Parameterized):
         return hash(json.dumps(self.to_dict()))
 
     def _reset_tmpdir(self):
-        self._save_hash=""
-        self._build_hash=""
+        self._save_hash = ""
+        self._build_hash = ""
         for child in self._tmppath.iterdir():
             if child.is_file():
                 child.unlink()
@@ -159,11 +152,11 @@ class Project(param.Parameterized):
 
     def _save_to_tmpdir(self):
         _hash = self._hash
-        if self._save_hash==_hash:
+        if self._save_hash == _hash:
             return
 
         self._reset_tmpdir()
-        with set_directory(self._tmppath/"source"):
+        with set_directory(self._tmppath / "source"):
             self.source.save()
         self._save_hash = _hash
 
@@ -207,14 +200,14 @@ class Project(param.Parameterized):
             json.dump(obj=build_json, fp=file, indent=1)
 
     def _remove_tmpbuilddir(self):
-        self._build_hash=""
-        tmpbuildpath = self._tmppath/"build"
+        self._build_hash = ""
+        tmpbuildpath = self._tmppath / "build"
         if tmpbuildpath.exists():
             shutil.rmtree(tmpbuildpath)
 
     def _build_to_tmpdir(self, base_target):
         _hash = self._hash + hash(base_target)
-        if self._build_hash==_hash:
+        if self._build_hash == _hash:
             return
 
         self._remove_tmpbuilddir()
@@ -229,7 +222,6 @@ class Project(param.Parameterized):
                     kwargs=kwargs,
                 )
                 process.start()
-
                 with set_directory(Path("build")):
                     self.save_build_json(kwargs)
                 process.join()
@@ -253,8 +245,8 @@ class Project(param.Parameterized):
 
     def rebuild(self, base_target=""):
         """Forces as rebuild"""
-        self._save_hash=""
-        self._build_hash=""
+        self._save_hash = ""
+        self._build_hash = ""
         self.build(base_target=base_target)
 
     def to_dict(self):
@@ -314,17 +306,15 @@ class Project(param.Parameterized):
         self.source.readme = project.source.readme
         self.source.requirements = project.source.requirements
         self.source.thumbnail = project.source.thumbnail
-        self._save_hash=""
-        self._build_hash=""
+        self._save_hash = ""
+        self._build_hash = ""
         self._reset_tmpdir()
 
         # pylint: disable=protected-access
         with set_directory(self._tmppath):
             project._copy_from_tmpdir()
-        self._save_hash=project._save_hash
-        self._build_hash=project._build_hash
-
-
+        self._save_hash = project._save_hash
+        self._build_hash = project._build_hash
 
 
 class User(param.Parameterized):
@@ -577,11 +567,10 @@ class AzureBlobStorage(Storage):
             return self.web_url + key + "/" + str(file_path)
         return self.blob_url + container_name + "/" + key + "/" + str(file_path)
 
-
     def get_keys(self) -> List[str]:
         """Returns the app keys from the blob storage"""
         keys = []
-        for user in self.web_container_client.walk_blobs('', delimiter='/'):
+        for user in self.web_container_client.walk_blobs("", delimiter="/"):
             if isinstance(user, BlobPrefix):
                 for app in user:
                     if isinstance(app, BlobPrefix):

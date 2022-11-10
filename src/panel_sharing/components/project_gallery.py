@@ -139,7 +139,7 @@ def _get_content(key: str, apps: List[str]):
 
     if len(filter_apps) > MAX_CARDS:
         filter_apps = filter_apps[0:MAX_CARDS]
-        max_apps=True
+        max_apps = True
     for app in sorted(filter_apps):
         content += _get_card(app)
 

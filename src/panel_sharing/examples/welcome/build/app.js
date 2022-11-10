@@ -59,12 +59,12 @@ pn.Column(
 production. Panel is very popular in *real* science, engineering and finance. It can be used successfully in
 any domain.
 
-[Panel sharing](https://github.com/awesome-panel/panel-sharing) is **the fastest way to develop, [convert](https://panel.holoviz.org/user_guide/Running_in_Webassembly.html) and share Panel data apps**.
+[Panel sharing](https://github.com/awesome-panel/panel-sharing) is **the fastest way to develop, [convert](https://panel.holoviz.org/user_guide/Running_in_Webassembly.html) and share Panel data apps**. Check out the [User Guide](https://github.com/awesome-panel/panel-sharing/blob/main/docs/user-guide.md) to learn more.
 
 Panel Sharing was made with Panel! Check out the code and **report issues
 [here](https://github.com/awesome-panel/panel-sharing)**.
 
-**Select an example app in the sidebar** to get started.
+**Select an example app in the sidebar** or from the [Gallery](https://awesome-panel.org/sharing_gallery) to get started.
 """
     ),
     pn.pane.Alert(
@@ -80,7 +80,6 @@ pn.state.template.param.update(
     favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",
     title="Welcome",
 )
-
 
 await write_doc()
   `
