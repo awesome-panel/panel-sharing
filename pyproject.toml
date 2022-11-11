@@ -39,6 +39,7 @@ dependencies = [
     "azure-storage-blob",
     "azure-identity",
     "azure-mgmt-cdn",
+    "diskcache",
 ]
 dynamic = ["version"]
 
@@ -100,6 +101,7 @@ module = [
     "param.*",
     "pyviz_comms.*",
     "azure.mgmt.cdn.*",
+    "diskcache.*",
 ]
 ignore_missing_imports = true
 

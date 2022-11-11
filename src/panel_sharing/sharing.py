@@ -1,9 +1,11 @@
 """Create the Awesome Panel Sharing App"""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import panel as pn
+from diskcache import Cache
 
 from panel_sharing import components
 from panel_sharing.models import AppState, AzureBlobStorage, Project, Site
@@ -15,6 +17,9 @@ from panel_sharing.utils import (
     notify_app_key_not_found,
 )
 
+logger = logging.getLogger("panel_sharing")
+logger.setLevel(logging.INFO)
+
 RAW_CSS = """
 .sidenav a {
     padding: 0px !important;
@@ -24,8 +29,8 @@ RAW_CSS = """
 }
 """
 
-if not "panel-sharing" in pn.state.cache:
-    pn.state.cache["panel-sharing"] = {"state": {}}
+
+cache = Cache(".cache/panel_sharing")
 
 
 @pn.cache
@@ -74,6 +79,7 @@ def create():
         examples: A path to a gallery of example projects. Defaults to EXAMPLES.
 
     """
+    logger.info("CREATE STARTED")
     pn.config.raw_css.append(RAW_CSS)
     pn.extension(
         "ace", sizing_mode="stretch_width", notifications=True, exception_handler=exception_handler
@@ -89,6 +95,7 @@ def create():
         project.build()
         state.copy(project)
         if pn.state.location:
+            logger.info("set_example: updating location")
             pn.state.location.search = ""
             pn.state.location.update_query(example=project.name)
 
@@ -106,24 +113,23 @@ def create():
     authentication = components.OAuth()
 
     pn.bind(state.user.authenticate, name=authentication.param.user, watch=True)
+    logger.info("authenticating user")
     state.user.authenticate(authentication.user)
 
     @pn.depends(authentication.param.state, watch=True)
     def handle_auth_state(state, app_state=state):
+        logger.info("handle_auth_state")
         if not state:
             return
-        cache = pn.state.cache["panel-sharing"]["state"]
-        if not state in cache:
-            cache[state] = {
-                "source": app_state.project.source.to_dict(),
-                "key": app_state.development_key,
-            }
-        else:
-            app_state.project.source.param.update(**cache[state]["source"])
-            app_state._set_development(cache[state]["key"])  # pylint: disable=protected-access
+        cache[state] = {
+            "source": app_state.project.source.to_dict(),
+            "key": app_state.development_key,
+        }
 
-    login_state = pn.state.session_args.get("state", [b""])[0].decode("utf8")
-    handle_auth_state(login_state)
+    oauth_state = authentication.get_state_from_session_args()
+    if oauth_state and oauth_state in cache:
+        state.project.source.param.update(**cache[oauth_state]["source"])
+        state._set_development(cache[oauth_state]["key"])  # pylint: disable=protected-access
 
     template = pn.template.FastGridTemplate(
         site=state.site.name,
@@ -142,6 +148,7 @@ def create():
     )
     template.main[0:5, 0:6] = source_pane
     template.main[0:5, 6:12] = target_pane
+    logger.info("CREATE FINISHED")
     return template
 
 

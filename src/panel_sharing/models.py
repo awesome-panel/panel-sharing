@@ -19,9 +19,9 @@ from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobServiceClient, ContentSettings
 from azure.storage.blob._list_blobs_helper import BlobPrefix
 from panel import __version__
-from panel.io.convert import convert_app
 
 from panel_sharing import VERSION, config
+from panel_sharing.convert import _convert_project
 from panel_sharing.shared.azure.cdn import AzureCDN
 from panel_sharing.utils import Timer, set_directory
 
@@ -50,13 +50,6 @@ ctx_forkserver.set_forkserver_preload(
 
 EXAMPLES = Path(__file__).parent / "examples"
 AZURE_CDN = AzureCDN()
-
-
-def _convert_project(app: str = "source/app.py", dest_path: str = "build", requirements="auto"):
-    """Helper function"""
-    Path(dest_path).mkdir(parents=True, exist_ok=True)
-    convert_app(app=Path(app), dest_path=Path(dest_path), requirements=requirements)  # type: ignore
-
 
 class Source(param.Parameterized):
     """Represent the source files"""
@@ -237,7 +230,6 @@ class Project(param.Parameterized):
                     kwargs=kwargs,
                 )
                 process.start()
-
                 with set_directory(Path("build")):
                     self.save_build_json(kwargs)
                 process.join()
@@ -585,7 +577,6 @@ class AzureBlobStorage(Storage):
         if container_name.endswith("web"):
             return self.web_url + key + "/" + str(file_path)
         return self.blob_url + container_name + "/" + key + "/" + str(file_path)
-
 
     def get_keys(self) -> List[str]:
         """Returns the app keys from the blob storage"""
