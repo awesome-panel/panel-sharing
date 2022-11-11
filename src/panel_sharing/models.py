@@ -23,6 +23,7 @@ from panel.io.convert import convert_app
 
 from panel_sharing import VERSION, config
 from panel_sharing.utils import Timer, set_directory
+from panel_sharing.shared.azure.cdn import AzureCDN
 
 if os.name == "nt":
     CTX_METHOD = "spawn"
@@ -48,6 +49,7 @@ ctx_forkserver.set_forkserver_preload(
 )
 
 EXAMPLES = Path(__file__).parent / "examples"
+AZURE_CDN = AzureCDN()
 
 
 def _convert_project(app: str = "source/app.py", dest_path: str = "build", requirements="auto"):
@@ -551,6 +553,8 @@ class AzureBlobStorage(Storage):
                             blob_client.upload_blob(
                                 data, overwrite=True, content_settings=content_settings
                             )
+                breakpoint()
+                AZURE_CDN.purge(content_paths=[f"/{key}/*"])
 
     def __delitem__(self, key):
         raise NotImplementedError()
