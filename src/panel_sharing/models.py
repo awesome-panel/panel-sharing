@@ -22,8 +22,8 @@ from panel import __version__
 from panel.io.convert import convert_app
 
 from panel_sharing import VERSION, config
-from panel_sharing.utils import Timer, set_directory
 from panel_sharing.shared.azure.cdn import AzureCDN
+from panel_sharing.utils import Timer, set_directory
 
 if os.name == "nt":
     CTX_METHOD = "spawn"
@@ -553,7 +553,6 @@ class AzureBlobStorage(Storage):
                             blob_client.upload_blob(
                                 data, overwrite=True, content_settings=content_settings
                             )
-                breakpoint()
                 AZURE_CDN.purge(content_paths=[f"/{key}/*"])
 
     def __delitem__(self, key):
