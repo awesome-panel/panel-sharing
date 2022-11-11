@@ -37,6 +37,8 @@ dependencies = [
     "bokeh<3.0",
     "panel<1.0",
     "azure-storage-blob",
+    "azure-identity",
+    "azure-mgmt-cdn",
 ]
 dynamic = ["version"]
 
@@ -97,6 +99,7 @@ module = [
     "hvplot.*",
     "param.*",
     "pyviz_comms.*",
+    "azure.mgmt.cdn.*",
 ]
 ignore_missing_imports = true
 
