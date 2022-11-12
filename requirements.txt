@@ -1,3 +1,2 @@
 panel
-numpy
-scikit-image
+textblob

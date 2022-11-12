@@ -1,2 +1,2 @@
 """This package provides ..."""
-VERSION = "0.19.0"
+VERSION = "0.26.0"

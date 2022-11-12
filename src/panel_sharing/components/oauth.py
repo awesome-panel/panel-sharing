@@ -1,7 +1,6 @@
 """The OAuth component enables users to authenticate with Github"""
 from __future__ import annotations
 
-import json
 import logging
 import os
 import uuid
@@ -9,12 +8,18 @@ import uuid
 import panel as pn
 import param
 import requests
+from diskcache import Cache
 from tornado.web import create_signed_value, decode_signed_value
 
-# from panel_sharing.utils import del_query_params
+from panel_sharing.utils import del_query_params
+
+cache = Cache(".cache/panel_sharing_oauth")
 
 logger = logging.getLogger("oauth")
 logger.setLevel(logging.INFO)
+
+SECURE_COOKIE = "state"
+SECURE_COOKIE_TTL_IN_DAYS = 10
 
 
 class JSActions(pn.reactive.ReactiveHTML):  # pylint: disable=too-many-ancestors
@@ -44,14 +49,16 @@ const {name, value, days}=data._set_cookie
 createCookie(name, value, days)""",
         "_delete_secure_cookie": """
 value=data._delete_secure_cookie+'=; Max-Age=-99999999; path=/;secure'
-document.cookie = value""",
+document.cookie = value
+""",
     }
 
     def __init__(self):
         super().__init__(height=0, width=0, sizing_mode="fixed", margin=0)
 
     def open(self, url: str):
-        """Opens the url in a new tab"""
+        """Opens the url in the same tab"""
+        logger.info("Open and redirect to %s", url)
         if url:
             self._url = url
             self._open = not self._open
@@ -66,6 +73,7 @@ document.cookie = value""",
             value: The value of the cookie. Please not you will have to encrypt this your self
             days: Days to expiration. Defaults to 1.0.
         """
+        logger.info("set_secure_cookie %s %s", name, value)
         self._set_cookie = {"name": name, "value": value, "days": days}
 
     def delete_secure_cookie(self, name):
@@ -74,6 +82,7 @@ document.cookie = value""",
         Args:
             name: The name of the cookie to delete
         """
+        logger.info("delete_secure_cookie %s", name)
         self._delete_secure_cookie = name
 
 
@@ -100,16 +109,11 @@ class OAuth(pn.viewable.Viewer):
 
     user_info = param.Dict(constant=True)
     user = param.String(constant=True)
-    access_token = param.String(constant=True)
 
-    state = param.String(constant=True)
+    state = param.String()
 
-    def __init__(self, **params):
-        params["user_info"] = params.get("user_info", {})
-        params["user"] = params.get("user", "")
-        params["access_token"] = params.get("access_token", "")
-
-        super().__init__(**params)
+    def __init__(self):
+        super().__init__()
 
         self._client_id = os.environ.get("PANEL_OAUTH_KEY", "")
         self._client_secret = os.environ.get("PANEL_OAUTH_SECRET", "")
@@ -117,9 +121,11 @@ class OAuth(pn.viewable.Viewer):
         self._oauth_redirect_uri = os.environ.get("PANEL_OAUTH_REDIRECT_URI", "")
         self._jsactions = JSActions()
 
-        self._set_user_from_cookie()
+        self._set_user_from_state()
         if not self.user:
             self._set_user_from_redirect()
+
+        pn.state.onload(lambda: del_query_params("code", "state", period=1000))
 
     @pn.depends("user")
     def _panel(self):
@@ -146,16 +152,17 @@ class OAuth(pn.viewable.Viewer):
     def __panel__(self):
         return pn.panel(self._panel)
 
-    def _set_user_from_cookie(self):
-        user_info = self._get_secure_cookie("user_info")
-        if user_info:
-            if "login" in user_info:
-                with param.edit_constant(self):
-                    self.user_info = json.loads(user_info)
-                    self.user = self.user_info["login"]
-                    logger.info("Logged in %s from user_info cookie", self.user)
+    def _set_user_from_state(self):
+        state = self._get_secure_cookie(SECURE_COOKIE)
+        user_info = cache.get(state, {}).get("user_info", {})
+        user = user_info.get("login", "")
+        if user_info and user:
+            with param.edit_constant(self):
+                self.user_info = user_info
+                self.user = user
+                logger.info("Logged in user %s from user_info in state", self.user)
         else:
-            logger.info("No user_info cookie, i.e. no user to log in.")
+            logger.info("No user_info in state.")
 
     def _set_secure_cookie(self, name, value, days=10):
         signed_value = create_signed_value(self._cookie_secret, name, value).decode("utf8")
@@ -172,17 +179,21 @@ class OAuth(pn.viewable.Viewer):
         self._jsactions.delete_secure_cookie(name)
 
     def _is_valid(self, state: str) -> bool:
-        return bool(self._get_secure_cookie("state") == state and state)
+        cookie_state = self._get_secure_cookie("state")
+        logger.info("expected state %s", state)
+        logger.info("cookie   state %s", cookie_state)
+        return bool(state and cookie_state == state)
 
     def _create_state(self):
         with param.edit_constant(self):
             self.state = str(uuid.uuid4())
-        self._set_secure_cookie("state", self.state, days=1.0 / 24 / 60 / 6)
-
+        self._set_secure_cookie(SECURE_COOKIE, self.state, days=SECURE_COOKIE_TTL_IN_DAYS)
+        cache[self.state] = {}
         return self.state
 
     @pn.depends("log_in", watch=True)
     def _log_in_handler(self, _=None):
+        logger.info("Login triggered. Redirecting to https://github.com/login/oauth/authorize")
         url = (
             "https://github.com/login/oauth/authorize"
             f"?client_id={self._client_id}"
@@ -190,74 +201,82 @@ class OAuth(pn.viewable.Viewer):
             f"&allow_signup=true"
         )
         self._jsactions.open(url)
-        logger.info("Redirecting to https://github.com/login/oauth/authorize")
 
     @pn.depends("log_out", watch=True)
     def _log_out_handler(self):
         user = self.user
-        self._delete_secure_cookie("user_info")
-        self._delete_secure_cookie("access_token")
+        state = self._get_secure_cookie(SECURE_COOKIE)
+        self._delete_secure_cookie(SECURE_COOKIE)
+        del cache[state]
+
         with param.edit_constant(self):
             self.user_info = {}
             self.user = ""
-            self.access_token = ""
             self.param.trigger("user")
         logger.info("Logged out %s", user)
 
     def _set_user_from_redirect(self):
-        code = pn.state.session_args.get("code", [b""])[0].decode("utf8")
-        logger.info("Code found in session_args")
-        with param.edit_constant(self):
-            self.state = pn.state.session_args.get("state", [b""])[0].decode("utf8")
-        logger.info("State %s found", self.state)
-        if self._is_valid(state=self.state) and code:
-            access_token = self._get_access_token(code)
+        code = self._get_code_from_session_args()
+        if not code:
+            logger.info("No code found in session_args")
+            return
+        logger.info("Code %s found in session_args", code)
+
+        state = self.get_state_from_session_args()
+        if not state:
+            logger.info("No state found in session_args")
+            return
+        logger.info("State %s found in session_args", state)
+
+        if self._is_valid(state=state):
+            logger.info("State is valid")
+            access_token = self._request_access_token(code)
             if access_token:
-                self._set_user_from_access_token(access_token)
+                logger.info("access_token received")
+                user_info = self._request_user_info(access_token=access_token)
+                if user_info:
+                    logger.info("user_info received")
+                    self._set_user(user_info, state=state)
+                else:
+                    logger.info("No user_info received")
             else:
-                logger.info("No access_token found")
+                logger.info("No access_token received")
         else:
-            logger.info("State or code not valid")
+            logger.info("state is not valid")
 
-        # with param.edit_constant(self):
-        #     self.state = ""
+    def _set_user(self, user_info, state):
+        with param.edit_constant(self):
+            self.user_info = user_info
+            self.user = self.user_info["login"]
+            cache[state] = {"user_info": self.user_info}
 
-        # def on_load():
-        #     self._delete_secure_cookie("state")
-        #     del_query_params("state", "code")
+        logger.info("Logged in %s successfully", self.user)
 
-        # pn.state.onload(on_load)
+    def _get_code_from_session_args(self):
+        return pn.state.session_args.get("code", [b""])[0].decode("utf8")
 
-    def _set_user_from_access_token(self, access_token):
-        response = requests.get(
+    def get_state_from_session_args(self):
+        """Returns the state value or '' if not given"""
+        return pn.state.session_args.get("state", [b""])[0].decode("utf8")
+
+    def _request_user_info(self, access_token: str):
+        response_json = requests.get(
             url="https://api.github.com/user",
             timeout=20,
             headers=dict(
                 authorization=f"Bearer {access_token}",
                 accept="application/json",
             ),
-        )
-        response_json = response.json()
+        ).json()
         if "login" in response_json:
-            with param.edit_constant(self):
-                self.user_info = response_json
-                self.user = self.user_info["login"]
-                self.access_token = access_token
+            return response_json
+        return {}
 
-                def on_load():
-                    self._set_secure_cookie("access_token", self.access_token, days=10)
-                    self._set_secure_cookie(name="user_info", value=json.dumps(self.user_info))
-
-                pn.state.onload(on_load)
-            logger.info("Logged in %s successfully", self.user)
-        else:
-            logger.info("No login in response_json")
-
-    def _get_access_token(self, code: str):
+    def _request_access_token(self, code: str):
         if not code:
             return ""
 
-        response = requests.post(
+        access_token_json = requests.post(
             url="https://github.com/login/oauth/access_token",
             timeout=20,
             headers=dict(
@@ -269,14 +288,15 @@ class OAuth(pn.viewable.Viewer):
                 client_secret=self._client_secret,
                 code=code,
             ),
-        )
-        if not "access_token" in response.json():
-            logger.info("No access_token in response.json()")
+        ).json()
+        if not "access_token" in access_token_json:
             return ""
-        return response.json()["access_token"]
+        return access_token_json["access_token"]
 
 
 if __name__.startswith("bokeh"):
+    print("RESTARTING")
+
     pn.extension(sizing_mode="stretch_width")
 
     component = OAuth()

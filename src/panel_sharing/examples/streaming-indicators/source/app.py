@@ -37,5 +37,3 @@ pn.template.FastListTemplate(
         layout,
     ],
 ).servable()
-
-    

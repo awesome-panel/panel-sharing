@@ -96,11 +96,18 @@ USER_NAME_REGEX = "^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$"
 PROJECT_NAME = "new"
 REPOSITORY_NAME = "new"
 AZURE_BLOB_URL = "https://awesomepanelsharing.blob.core.windows.net/"
-# "https://sharing.awesome-panel.org/"
-AZURE_WEB_URL = "https://awesomepanelsharing.z16.web.core.windows.net/"
+# "https://awesomepanelsharing.z16.web.core.windows.net/"
+AZURE_WEB_URL = "https://sharing.awesome-panel.org/"
 AZURE_PROJECT_CONTAINER_NAME = "project"
 AZURE_WEB_CONTAINER_NAME = "$web"
 AZURE_BLOB_CONN_STR = os.getenv("AZURE_BLOB_CONN_STR", "")
+AZURE_SUBSCRIPTION_ID = os.getenv("AZURE_SUBSCRIPTION_ID", "")
+AZURE_RESOURCE_GROUP_NAME = "awesome-panel"
+AZURE_CDN_PROFILE_NAME = "awesome-panel"
+AZURE_CDN_ENDPOINT_NAME = "awesome-panel-sharing"
+AZURE_APP_CLIENT_ID = os.getenv("AZURE_APP_CLIENT_ID", "")
+AZURE_APP_CLIENT_SECRET = os.getenv("AZURE_APP_CLIENT_SECRET", "")
+AZURE_TENANT_ID = os.getenv("AZURE_TENANT_ID", "")
 
 AUTHENTICATED = False
 
