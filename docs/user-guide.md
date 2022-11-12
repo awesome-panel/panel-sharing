@@ -1,20 +1,24 @@
 # Panel Sharing: The fastest way to share your data app
 
-Inspiration: https://www.whitphx.info/posts/20221104-streamlit-wasm-stlite/
+[Panel Sharing](https://awesome-panel.org) is **the fastest way to share [Panel](https://panel.holoviz.org) data apps** with the world.
 
-https://shiny.rstudio.com/py/docs/shinylive.html
+To **get started in less than a minute** go to [Panel Sharing](https://awesome-panel.org/sharing) and
 
-[Panel Sharing](https://awesome-panel.org) makes it very easy to share [Panel](https://panel.holoviz.org) data apps with the world
+1. Add your code
+2. Convert the app
+3. Share your app
 
-- Go to [Panel Sharing](https://awesome-panel.org)
-- Add your code and convert the app
-- Login and share your app
+[![Panel Sharing Editor](assets/images/awesome-panel-sharing-getting-started.jpg)](https://awesome-panel.org/sharing)
 
 Now you can find the app in the [Panel Sharing Gallery](https://awesome-panel.org/sharing_gallery).
 
+[![Panel Sharing Gallery](assets/images/awesome-panel-sharing-gallery.jpg)](https://awesome-panel.org/sharing_gallery)
+
+For more details check out the [How to Guides](#how-to) below.
+
 This is made possible by [`panel convert`](https://panel.holoviz.org/user_guide/Running_in_Webassembly.html) that converts Panel apps to [webassembly](https://webassembly.org/). The Webassembly runtime makes it possible to run your apps offline, on all devices and scale to many users for free.
 
-Please be aware that the panel converted apps downloads a large amount of data and makes all your code readable by other users; **DON'T INCLUDE PASSWORDS AND OTHER SECRETS IN THE CODE!**.
+Please be aware that **the apps downloads a large amount of data** and makes all your code readable by other users; **DON'T INCLUDE PASSWORDS OR OTHER SECRETS IN YOUR CODE!**.
 
 ## How to
 
@@ -47,17 +51,19 @@ Open the [sharing gallery](https://awesome-panel.org/sharing_gallery) and
 1. Add your code to the `app.py` editor tab.
 2. Click the *convert* button and verify that your app works
 3. Click the *login* button to log in via Github
+
+![App Editor Part 1](assets/images/awesome-panel-sharing-editor-sharing1.jpg)
+
 4. Give your app a nice name
 5. Click the *Share* button
 6. Click the *Copy* button to copy the link to your app or click the *Open* button to open your app in a new tab.
 7. Optionally copy the url in the browser if you want a direct link to your app in the editor.
 
-![App Editor Part 1](assets/images/awesome-panel-sharing-editor-sharing1.jpg)
 ![App Editor Part 2](assets/images/awesome-panel-sharing-editor-sharing2.jpg)
 
 Optionally you can add your requirements to the `requirements.txt` editor tab. Most often this is not needed though as `panel convert` inspects your code and adds the requirements automatically.
 
-App Example URL: [https://awesomepanelsharing.z16.web.core.windows.net/MarcSkovMadsen/videostream-interface/app.html](https://awesomepanelsharing.z16.web.core.windows.net/MarcSkovMadsen/videostream-interface/app.html) [THIS LINK WILL BE CHANGED to https://sharing.awesome-panel.org/MarcSkovMadsen/videostream-interface later]
+App Example URL: [https://sharing.awesome-panel.org/MarcSkovMadsen/videostream-interface/app.html](https://sharing.awesome-panel.org/MarcSkovMadsen/videostream-interface/app.html)
 
 Editor Example URL: [https://awesome-panel.org/sharing?app=MarcSkovMadsen/videostream-interface](https://awesome-panel.org/sharing?app=MarcSkovMadsen/videostream-interface)
 
@@ -68,10 +74,13 @@ Open the [sharing gallery](https://awesome-panel.org/sharing_gallery) and
 1. Search and find your app
 2. Click the code icon
 
-![Search App and Open Editor with Code](assets/images/awesome-panel-sharing-update-app.jpg)
+[![Search App and Open Editor with Code](assets/images/awesome-panel-sharing-update-app.jpg)](https://awesome-panel.org/sharing_gallery)
 
 This will open the editor with the code of your app. Now you can **edit and re-share your app**.
 
-Please note that after the re-build succeeded it might take from seconds to a
-couple of minutes before the app is updated. The technical reason is that it needs to
-*[purge](https://learn.microsoft.com/en-us/azure/cdn/cdn-purge-endpoint)* the files on a CDN.
+[![Reshare your app in via the Editor](assets/images/awesome-panel-sharing-reshare.jpg)](https://awesome-panel.org/sharing?app=sophiamyang%2FNLP)
+
+Example Editor Url: [https://awesome-panel.org/sharing?app=sophiamyang%2FNLP](https://awesome-panel.org/sharing?app=sophiamyang%2FNLP)
+
+Please note that **after the app is re-shared it might take from seconds to a
+couple of minutes before the app is updated**. The technical reason is that it needs to *[purge](https://learn.microsoft.com/en-us/azure/cdn/cdn-purge-endpoint)* the files on a CDN.
