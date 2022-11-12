@@ -42,7 +42,6 @@ def test_base64():
         name="Hello",
         source=Source(
             code="import panel",
-            readme="# Intro",
             requirements="panel",
         ),
     )

@@ -1,5 +1,6 @@
 """The Gallery component enables users to select a project from a list of projects"""
 import random
+import string
 from typing import List
 
 import panel as pn
@@ -97,28 +98,28 @@ MAX_CARDS = 50
 def _get_card(key: str) -> str:
     """Returns a Fast HTML card"""
     app_author, app_name = key.split("/", 2)
+    app_name = string.capwords(app_name.replace("_", " ").replace("-", " "))
     app_url = f"{WEB_URL}{key}/app.html"
-    app_description = f"by {app_author}"
+    image_url = f"{WEB_URL}{key}/app.jpg"
     app_author_url = f"https://github.com/{app_author}"
     app_code = f"sharing?app={key}"
     app_author_avatar = f"https://github.com/{app_author}.png?size=40"
 
-    image_url = random.choice(image_urls)
+    alternative_image_url = random.choice(image_urls)
 
     return f"""
 <li class="card">
 <fast-card class="gallery-item">
-<a title="Click to open" class="card-action" href="{ app_url }">
-<img class="card-image" src="{image_url}"/>
+<a title="Click to open the app" class="card-action" href="{ app_url }">
+<img class="card-image" src="{image_url}" onerror="this.onerror=null;this.src='{alternative_image_url}';"/>
 <div class="card-content">
     <h2 class="card-header">{ app_name }</h2>
-    <p class="card-text">{ app_description }</p>
 </div></a>
 <div class="card-actions">
     <a class="card-action author-action" href="{ app_author_url }" target="_blank">
-        <img src="{ app_author_avatar }" alt="avatar" class="avatar" title="author: {app_author}">
+        <img src="{ app_author_avatar }" alt="avatar" class="avatar" title="Click to view the author: {app_author}">
     </a>
-    <a title="Edit the Code" appearance="neutral" class="card-action code-action" href="{app_code}">
+    <a title="Click to edit the Code" appearance="neutral" class="card-action code-action" href="{app_code}">
         <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
         <path fill-rule="evenodd" d="M4.854 4.146a.5.5 0 0 1 0 .708L1.707 8l3.147 3.146a.5.5 0 0 1-.708.708l-3.5-3.5a.5.5 0 0 1 0-.708l3.5-3.5a.5.5 0 0 1 .708 0zm6.292 0a.5.5 0 0 0 0 .708L14.293 8l-3.147 3.146a.5.5 0 0 0 .708.708l3.5-3.5a.5.5 0 0 0 0-.708l-3.5-3.5a.5.5 0 0 0-.708 0zm-.999-3.124a.5.5 0 0 1 .33.625l-4 13a.5.5 0 0 1-.955-.294l4-13a.5.5 0 0 1 .625-.33z"/>
         </svg>
@@ -127,6 +128,15 @@ def _get_card(key: str) -> str:
 </fast-card>
 </li>
 """
+
+
+def _to_app_title(key):
+    try:
+        app_name = key.split("/", 2)[1]
+    except IndexError:
+        app_name = key
+
+    return string.capwords(app_name.replace("_", " ").replace("-", " "))
 
 
 def _get_content(key: str, apps: List[str]):
@@ -140,7 +150,7 @@ def _get_content(key: str, apps: List[str]):
     if len(filter_apps) > MAX_CARDS:
         filter_apps = filter_apps[0:MAX_CARDS]
         max_apps = True
-    for app in sorted(filter_apps):
+    for app in sorted(filter_apps, key=_to_app_title):
         content += _get_card(app)
 
     content = f"""

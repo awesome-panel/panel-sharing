@@ -51,6 +51,7 @@ ctx_forkserver.set_forkserver_preload(
 EXAMPLES = Path(__file__).parent / "examples"
 AZURE_CDN = AzureCDN()
 
+
 class Source(param.Parameterized):
     """Represent the source files"""
 
@@ -263,7 +264,12 @@ class Project(param.Parameterized):
 
     def to_base64(self):
         """Returns the project base64 encoded"""
-        value = json.dumps(self.to_dict(), separators=(",", ":"))
+        project_dict = self.to_dict()
+        source_dict = project_dict.get("source", {})
+        project_dict["source"] = {
+            key: value for key, value in source_dict.items() if key in ["code", "requirements"]
+        }
+        value = json.dumps(project_dict, separators=(",", ":"))
         result = base64.b64encode(value.encode(encoding="utf8")).decode(encoding="utf8")
         print("base64 len", len(result))
         return result
@@ -323,8 +329,6 @@ class Project(param.Parameterized):
             project._copy_from_tmpdir()
         self._save_hash = project._save_hash
         self._build_hash = project._build_hash
-
-
 
 
 class User(param.Parameterized):
