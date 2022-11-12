@@ -6,9 +6,9 @@ from typing import List
 import param
 from azure.identity import ClientSecretCredential
 from azure.mgmt.cdn import CdnManagementClient
-from codetiming import Timer
 
 from panel_sharing import config
+from panel_sharing.utils import Timer
 
 logger = logging.getLogger("AzureCDN")
 
