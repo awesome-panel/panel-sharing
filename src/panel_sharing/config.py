@@ -3,7 +3,7 @@ import os
 
 SITE = "Awesome Panel"
 SITE_URL = "https://awesome-panel.org/sharing"
-TITLE = "Panel Sharing Prototype"
+TITLE = "Panel Sharing Alpha"
 
 FAQ = """
 # Frequently Asked Questions

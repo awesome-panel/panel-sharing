@@ -170,3 +170,6 @@ src/panel_sharing/models.py
 .env*
 !src/panel_sharing/examples/**
 cache/*/cache.db
+cache.db
+cache.db-shm
+cache.db-wal

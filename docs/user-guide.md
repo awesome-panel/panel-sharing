@@ -8,13 +8,15 @@ To **get started in less than a minute** go to [Panel Sharing](https://awesome-p
 2. Convert the app
 3. Share your app
 
-[![Panel Sharing Editor](assets/images/awesome-panel-sharing-getting-started.jpg)](https://awesome-panel.org/sharing)
+[![Panel Sharing Editor](assets/images/awesome-panel-sharing.gif)](https://awesome-panel.org/sharing)
 
 Now you can find the app in the [Panel Sharing Gallery](https://awesome-panel.org/sharing_gallery).
 
 [![Panel Sharing Gallery](assets/images/awesome-panel-sharing-gallery.jpg)](https://awesome-panel.org/sharing_gallery)
 
 For more details check out the [How to Guides](#how-to) below.
+
+## How it works
 
 This is made possible by [`panel convert`](https://panel.holoviz.org/user_guide/Running_in_Webassembly.html) that converts Panel apps to [webassembly](https://webassembly.org/). The Webassembly runtime makes it possible to run your apps offline, on all devices and scale to many users for free.
 
@@ -53,7 +55,7 @@ Editor Example URL: [https://awesome-panel.org/sharing?app=MarcSkovMadsen/videos
 
 ### Update and re-share your app
 
-Open the [sharing gallery](https://awesome-panel.org/sharing_gallery) and
+Open the [sharing gallery](https://awesome-panel.org/sharing_gallery)
 
 1. Search and find your app
 2. Click the code icon

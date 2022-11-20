@@ -68,7 +68,7 @@ Panel Sharing was made with Panel! Check out the code and **report issues
 """
     ),
     pn.pane.Alert(
-        "Panel Sharing is **currently a prototype**. **Your code and apps will not be persisted!**",
+        "Panel Sharing is **currently an alpha version**. **Functionality might change!**",
         alert_type="danger",
         margin=(0, 10),
     ),
@@ -80,6 +80,7 @@ pn.state.template.param.update(
     favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",
     title="Welcome",
 )
+
 
 await write_doc()
   `

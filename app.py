@@ -19,7 +19,7 @@ Panel Sharing was made with Panel! Check out the code and **report issues
 """
     ),
     pn.pane.Alert(
-        "Panel Sharing is **currently a prototype**. **Your code and apps will not be persisted!**",
+        "Panel Sharing is **currently an alpha version**. **Functionality might change!**",
         alert_type="danger",
         margin=(0, 10),
     ),
