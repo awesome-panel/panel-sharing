@@ -132,7 +132,7 @@ directory="test_results/cov_html"
 skip_empty=true
 
 [tool.bandit]
-exclude_dirs = [".venv", "venv",]
+exclude_dirs = [".venv", "venv", "apps"]
 severity="high"
 
 [tool.bandit.assert_used]

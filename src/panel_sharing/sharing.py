@@ -108,6 +108,21 @@ def create():
     source_pane = editor_tab
 
     target_pane = components.iframe(src=state.param.development_url)
+    # pylint: disable=line-too-long
+    getting_started = pn.Column(
+        pn.pane.Markdown(
+            """## 🏃 Get Started
+
+Check out the <fast-anchor href="https://github.com/awesome-panel/panel-sharing/blob/main/docs/user-guide.md" appearance="hypertext" class="hypertext" target="_blank">User Guide</fast-anchor>
+and report issues at <fast-anchor href="https://github.com/awesome-panel/panel-sharing" appearance="hypertext" class="hypertext" target="_blank">panel-sharing</fast-anchor>.
+""",
+            margin=0,
+            sizing_mode="stretch_width",
+        ),
+        sizing_mode="stretch_width",
+        margin=0,
+    )
+    # pylint: enable=line-too-long
     share_project = components.ShareProject(app_state=state, js_actions=project_builder.jsactions)
 
     authentication = components.OAuth()
@@ -140,6 +155,7 @@ def create():
         site_url="https://awesome-panel.org",
         favicon="https://raw.githubusercontent.com/MarcSkovMadsen/awesome-panel-assets/320297ccb92773da099f6b97d267cc0433b67c23/favicon/ap-1f77b4.ico",  # pylint: disable=line-too-long
         sidebar=[
+            getting_started,
             share_project,
             authentication,
             gallery,
