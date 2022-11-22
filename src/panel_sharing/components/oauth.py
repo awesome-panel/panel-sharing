@@ -4,16 +4,17 @@ from __future__ import annotations
 import logging
 import os
 import uuid
+from pathlib import Path
 
 import panel as pn
 import param
 import requests
-from diskcache import Cache
 from tornado.web import create_signed_value, decode_signed_value
 
+from panel_sharing.shared.persistent_cache import PersistentCache
 from panel_sharing.utils import del_query_params
 
-cache = Cache(".cache/panel_sharing_oauth")
+cache = PersistentCache(Path(".cache/panel_sharing_oauth"))
 
 logger = logging.getLogger("oauth")
 logger.setLevel(logging.INFO)
