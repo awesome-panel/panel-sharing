@@ -173,3 +173,4 @@ cache/*/cache.db
 cache.db
 cache.db-shm
 cache.db-wal
+source/*
