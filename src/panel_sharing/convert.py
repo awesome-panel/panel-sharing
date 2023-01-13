@@ -76,7 +76,7 @@ def _get_error_message(app_html_path: Path, app_js_path: Path, out: str, log_out
     if (
         app_html_path.exists()
         and app_js_path.exists()
-        and out.startswith("Successfully converted")
+        and "Successfully converted" in out  # If the app prints then it will be in out
         and not log_out
     ):
         return ""

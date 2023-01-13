@@ -102,6 +102,7 @@ module = [
     "pyviz_comms.*",
     "azure.mgmt.cdn.*",
     "diskcache.*",
+    "nbconvert",
 ]
 ignore_missing_imports = true
 
